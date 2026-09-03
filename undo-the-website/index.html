@@ -366,15 +366,17 @@
                     </div>
                   </div>
 
-                </div>
+                  <div class="action-divider"></div>
 
-                <button
-                  id="save-btn"
-                  class="btn btn-primary save-btn"
-                  type="button"
-                >
-                  Save
-                </button>
+                  <button
+                    id="save-btn"
+                    class="btn btn-primary save-btn"
+                    type="button"
+                  >
+                    Save
+                  </button>
+
+                </div>
 
               </div>
 
@@ -466,35 +468,30 @@
       </div>
 
 
-      <!-- ================= SYSTEM TOAST ================= -->
-      <div
-        id="system-toast"
-        class="system-toast"
-        role="status"
-        aria-live="polite"
-      >
-        <span class="toast-icon">!</span>
+    </div>
 
-        <div class="toast-content">
-          <strong id="toast-title">System Message</strong>
-          <span id="toast-message"></span>
-        </div>
+    <!-- TOAST OUTSIDE #app so it survives Stage 7 collapse -->
+    <div
+      id="system-toast"
+      class="system-toast"
+      role="status"
+      aria-live="polite"
+    >
+      <span class="toast-icon">!</span>
+
+      <div class="toast-content">
+        <strong id="toast-title">System Message</strong>
+        <span id="toast-message"></span>
       </div>
+    </div>
 
-
-      <!-- ================= FINAL STATE ================= -->
-      <div id="final-state" class="final-state">
-
-        <h1>404: Website Undone.</h1>
-
-        <p>There is nothing left to undo.</p>
-
-        <a href="#" id="redo-website">
-          [ Press Ctrl+Y to Redo the Website ]
-        </a>
-
-      </div>
-
+    <!-- FINAL STATE OUTSIDE #app so it's visible after collapse -->
+    <div id="final-state" class="final-state">
+      <h1>404: Website Undone.</h1>
+      <p>There is nothing left to undo.</p>
+      <a href="#" id="redo-website">
+        [ Press Ctrl+Y to Redo the Website ]
+      </a>
     </div>
 
     <script type="module" src="/src/main.js"></script>

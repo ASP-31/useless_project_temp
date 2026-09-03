@@ -55,6 +55,8 @@ const themeToggleBtn = document.getElementById("theme-toggle-btn");
 
 const app = document.getElementById("app");
 const footer = document.querySelector(".app-footer");
+const finalState = document.getElementById("final-state");
+const redoWebsiteLink = document.getElementById("redo-website");
 
 const footerRight = document.querySelector(".footer-right");
 const footerCenter = document.querySelector(".footer-center");
@@ -62,6 +64,358 @@ const footerLeft = document.querySelector(".footer-left");
 
 let destructionStage = 0;
 let destructionHistory = [];
+
+function hideElement(el) {
+  if (!el) return;
+  el.classList.add("glitch");
+  setTimeout(() => {
+    el.dataset.destroyed = "true";
+    el.classList.add("destroyed-element");
+    el.classList.remove("glitch");
+  }, 220);
+}
+
+function showElement(el) {
+  if (!el) return;
+  el.classList.remove("destroyed-element", "glitch");
+  el.removeAttribute("data-destroyed");
+}
+
+const destructionStages = [
+  // ═══════════════════════════════════════════════
+  //  STAGE 1 — FOOTER
+  // ═══════════════════════════════════════════════
+
+  {
+    name: "Footer: Privacy",
+    destroy() { hideElement(footerRight?.querySelector("a:nth-child(1)")); },
+    restore() { showElement(footerRight?.querySelector("a:nth-child(1)")); },
+    message: "Privacy policy has been undone.",
+  },
+  {
+    name: "Footer: Terms",
+    destroy() { hideElement(footerRight?.querySelector("a:nth-child(2)")); },
+    restore() { showElement(footerRight?.querySelector("a:nth-child(2)")); },
+    message: "Terms of service have been undone.",
+  },
+  {
+    name: "Footer: GitHub",
+    destroy() { hideElement(footerRight?.querySelector("a:nth-child(3)")); },
+    restore() { showElement(footerRight?.querySelector("a:nth-child(3)")); },
+    message: "GitHub link has been undone.",
+  },
+  {
+    name: "Footer: Status",
+    destroy() { hideElement(footerCenter); },
+    restore() { showElement(footerCenter); },
+    message: "Footer status removed.",
+  },
+  {
+    name: "Footer",
+    destroy() {
+      hideElement(footerLeft);
+      setTimeout(() => hideElement(footer), 100);
+    },
+    restore() {
+      showElement(footer);
+      showElement(footerLeft);
+    },
+    message: "The footer has been undone.",
+  },
+
+  // ═══════════════════════════════════════════════
+  //  STAGE 2 — SIDEBAR
+  // ═══════════════════════════════════════════════
+
+  {
+    name: "Sidebar: Storage",
+    destroy() {
+      hideElement(document.querySelector(".sidebar-bottom"));
+    },
+    restore() {
+      showElement(document.querySelector(".sidebar-bottom"));
+    },
+    message: "Storage indicator removed.",
+  },
+  {
+    name: "Sidebar: Add Document",
+    destroy() { hideElement(addDocumentBtn); },
+    restore() { showElement(addDocumentBtn); },
+    message: "Add Document removed.",
+  },
+  {
+    name: "Sidebar: Document List",
+    destroy() { hideElement(sidebarNav); },
+    restore() { showElement(sidebarNav); },
+    message: "Document list has been undone.",
+  },
+  {
+    name: "Sidebar: Header",
+    destroy() { hideElement(document.querySelector(".sidebar-header")); },
+    restore() { showElement(document.querySelector(".sidebar-header")); },
+    message: "Sidebar header removed.",
+  },
+  {
+    name: "Sidebar",
+    destroy() { hideElement(sidebar); },
+    restore() {
+      showElement(sidebar);
+      sidebar.classList.remove("collapsed");
+      headerSidebarToggleBtn.style.display = "none";
+      sidebarToggleBtn.style.display = "";
+    },
+    message: "The sidebar has been undone.",
+  },
+
+  // ═══════════════════════════════════════════════
+  //  STAGE 3 — EDITOR BOTTOM ACTION BAR
+  // ═══════════════════════════════════════════════
+
+  {
+    name: "Actions: More Options",
+    destroy() {
+      const wrap = document.querySelector("#more-options-btn")?.closest(".action-dropdown");
+      hideElement(wrap);
+    },
+    restore() {
+      const wrap = document.querySelector("#more-options-btn")?.closest(".action-dropdown");
+      showElement(wrap);
+    },
+    message: "More options removed.",
+  },
+  {
+    name: "Actions: Download",
+    destroy() { hideElement(downloadBtn); },
+    restore() { showElement(downloadBtn); },
+    message: "Download removed.",
+  },
+  {
+    name: "Actions: Link",
+    destroy() { hideElement(linkBtn); },
+    restore() { showElement(linkBtn); },
+    message: "Link button removed.",
+  },
+  {
+    name: "Actions: Emoji",
+    destroy() {
+      const wrap = document.querySelector("#emoji-btn")?.closest(".action-dropdown");
+      hideElement(wrap);
+    },
+    restore() {
+      const wrap = document.querySelector("#emoji-btn")?.closest(".action-dropdown");
+      showElement(wrap);
+    },
+    message: "Emoji picker removed.",
+  },
+  {
+    name: "Actions: Delete",
+    destroy() { hideElement(deleteDocBtn); },
+    restore() { showElement(deleteDocBtn); },
+    message: "Delete button removed.",
+  },
+  {
+    name: "Actions: Save",
+    destroy() { hideElement(saveBtn); },
+    restore() { showElement(saveBtn); },
+    message: "Save has been undone.",
+  },
+
+  // ═══════════════════════════════════════════════
+  //  STAGE 4 — EDITOR TOOLBAR
+  // ═══════════════════════════════════════════════
+
+  {
+    name: "Toolbar: Color",
+    destroy() {
+      const wrap = document.querySelector("#color-btn")?.closest(".toolbar-dropdown");
+      hideElement(wrap);
+    },
+    restore() {
+      const wrap = document.querySelector("#color-btn")?.closest(".toolbar-dropdown");
+      showElement(wrap);
+    },
+    message: "Color picker removed.",
+  },
+  {
+    name: "Toolbar: Alignment",
+    destroy() {
+      [alignLeftBtn, alignCenterBtn, alignRightBtn].forEach((b, i) => {
+        setTimeout(() => hideElement(b), i * 60);
+      });
+    },
+    restore() {
+      [alignLeftBtn, alignCenterBtn, alignRightBtn].forEach(showElement);
+    },
+    message: "Alignment controls removed.",
+  },
+  {
+    name: "Toolbar: Clear Formatting",
+    destroy() { hideElement(clearFormattingBtn); },
+    restore() { showElement(clearFormattingBtn); },
+    message: "Clear formatting removed.",
+  },
+  {
+    name: "Toolbar: Underline",
+    destroy() { hideElement(underlineBtn); },
+    restore() { showElement(underlineBtn); },
+    message: "Underline removed.",
+  },
+  {
+    name: "Toolbar: Bold",
+    destroy() { hideElement(boldBtn); },
+    restore() { showElement(boldBtn); },
+    message: "Bold removed.",
+  },
+  {
+    name: "Toolbar: Text Style",
+    destroy() {
+      const wrap = document.querySelector("#text-style-btn")?.closest(".toolbar-dropdown");
+      hideElement(wrap);
+    },
+    restore() {
+      const wrap = document.querySelector("#text-style-btn")?.closest(".toolbar-dropdown");
+      showElement(wrap);
+    },
+    message: "Text style removed. Formatting controls gone.",
+  },
+
+  // ═══════════════════════════════════════════════
+  //  STAGE 5 — EDITOR
+  // ═══════════════════════════════════════════════
+
+  {
+    name: "Editor: Text Content",
+    destroy() { hideElement(document.querySelector(".editor-content")); },
+    restore() { showElement(document.querySelector(".editor-content")); },
+    message: "Text content has been undone.",
+  },
+  {
+    name: "Editor: Container",
+    destroy() { hideElement(document.querySelector(".editor-container")); },
+    restore() { showElement(document.querySelector(".editor-container")); },
+    message: "Editor container removed.",
+  },
+  {
+    name: "Editor",
+    destroy() { hideElement(document.getElementById("editor-card")); },
+    restore() { showElement(document.getElementById("editor-card")); },
+    message: "The editor has been undone.",
+  },
+
+  // ═══════════════════════════════════════════════
+  //  STAGE 6 — NAVBAR
+  // ═══════════════════════════════════════════════
+
+  {
+    name: "Navbar: Export",
+    destroy() { hideElement(exportBtn); },
+    restore() { showElement(exportBtn); },
+    message: "Export removed.",
+  },
+  {
+    name: "Navbar: Theme Toggle",
+    destroy() { hideElement(themeToggleBtn); },
+    restore() { showElement(themeToggleBtn); },
+    message: "Theme toggle removed.",
+  },
+  {
+    name: "Navbar: Save Status",
+    destroy() { hideElement(document.querySelector(".save-status")); },
+    restore() { showElement(document.querySelector(".save-status")); },
+    message: "Save status removed.",
+  },
+  {
+    name: "Navbar: Document Title",
+    destroy() {
+      hideElement(document.getElementById("document-title"));
+      hideElement(document.querySelector(".document-info"));
+    },
+    restore() {
+      showElement(document.querySelector(".document-info"));
+      showElement(document.getElementById("document-title"));
+    },
+    message: "Document title removed.",
+  },
+  {
+    name: "Navbar: System Status",
+    destroy() { hideElement(document.getElementById("system-status")); },
+    restore() { showElement(document.getElementById("system-status")); },
+    message: "System status removed.",
+  },
+  {
+    name: "Navbar: Branding",
+    destroy() { hideElement(brandLink); },
+    restore() { showElement(brandLink); },
+    message: "UndoApp branding removed.",
+  },
+  {
+    name: "Header",
+    destroy() {
+      hideElement(document.getElementById("app-header"));
+      hideElement(sidebarToggleBtn);
+    },
+    restore() {
+      showElement(document.getElementById("app-header"));
+      showElement(sidebarToggleBtn);
+    },
+    message: "Header has been undone.",
+  },
+
+  // ═══════════════════════════════════════════════
+  //  STAGE 7 — UNDO CONTROLS
+  // ═══════════════════════════════════════════════
+
+  {
+    name: "Undo: History Counter",
+    destroy() { hideElement(document.querySelector(".history-counter")); },
+    restore() { showElement(document.querySelector(".history-counter")); },
+    message: "History counter removed.",
+  },
+  {
+    name: "Undo: Redo Button",
+    destroy() { hideElement(redoBtn); },
+    restore() { showElement(redoBtn); },
+    message: "Redo button removed.",
+  },
+  {
+    name: "Undo: Undo Button",
+    destroy() {
+      if (undoBtn) undoBtn.classList.add("unstable-undo");
+      setTimeout(() => hideElement(undoBtn), 400);
+    },
+    restore() {
+      showElement(undoBtn);
+      if (undoBtn) undoBtn.classList.remove("unstable-undo");
+    },
+    message: "UNDO BUTTON UNSTABLE",
+  },
+
+  // ═══════════════════════════════════════════════
+  //  STAGE 8 — FINAL 404
+  // ═══════════════════════════════════════════════
+
+  {
+    name: "Final State",
+    destroy() {
+      if (app) {
+        app.classList.add("glitch");
+        setTimeout(() => {
+          app.classList.add("destroyed-element-collapsed");
+          app.classList.remove("glitch");
+        }, 220);
+      }
+      setTimeout(() => {
+        if (undoBtn) undoBtn.classList.remove("unstable-undo");
+        if (finalState) finalState.classList.add("visible");
+      }, 300);
+    },
+    restore() {
+      if (finalState) finalState.classList.remove("visible");
+      if (app) app.classList.remove("destroyed-element-collapsed", "glitch");
+    },
+    message: "404 — THIS WEBSITE HAS BEEN UNDONE",
+  },
+];
 
 
 // ==========================================
@@ -279,10 +633,24 @@ function redo() {
 
 function updateHistoryUI() {
   const undoSteps = Math.max(history.length - 1, 0);
-  if (historyCount) historyCount.textContent = undoSteps;
+  const hasDestruction = destructionHistory.length > 0;
+  const canDestroy = destructionStage < destructionStages.length;
 
-  if (undoBtn) undoBtn.disabled = undoSteps === 0;
-  if (redoBtn) redoBtn.disabled = redoHistory.length === 0;
+  if (historyCount) {
+    if (hasDestruction) {
+      historyCount.textContent = destructionHistory.length;
+    } else {
+      historyCount.textContent = undoSteps;
+    }
+  }
+
+  const historyLabel = document.querySelector(".history-counter span:first-child");
+  if (historyLabel) {
+    historyLabel.textContent = hasDestruction ? "System Undo" : "User History";
+  }
+
+  if (undoBtn) undoBtn.disabled = !(undoSteps > 0 || canDestroy);
+  if (redoBtn) redoBtn.disabled = !(redoHistory.length > 0 || hasDestruction);
 }
 
 // ==========================================
@@ -308,92 +676,23 @@ function showToast(title, message, duration = 3000) {
 // WEBSITE DESTRUCTION ENGINE
 // ==========================================
 
-const destructionStages = [
-  {
-    name: "Footer Links",
-    target: () => footerRight,
-    message: "Some things are starting to disappear..."
-  },
-  {
-    name: "Footer Status",
-    target: () => footerCenter,
-    message: "System status is becoming unreliable."
-  },
-  {
-    name: "Footer Information",
-    target: () => footerLeft,
-    message: "Basic information is being lost."
-  },
-  {
-    name: "Footer",
-    target: () => footer,
-    message: "The footer has been undone."
-  }
-];
-
-function destroyElement(element) {
-  if (!element) return;
-
-  element.classList.add("glitch");
-
-  setTimeout(() => {
-    element.dataset.destroyed = "true";
-    element.style.transition =
-      "opacity 250ms ease, transform 250ms ease, max-height 250ms ease";
-
-    element.style.opacity = "0";
-    element.style.transform = "translateX(8px)";
-    element.style.maxHeight = "0";
-    element.style.overflow = "hidden";
-
-    setTimeout(() => {
-      element.style.display = "none";
-      element.classList.remove("glitch");
-    }, 260);
-  }, 120);
-}
-
-function restoreElement(element) {
-  if (!element) return;
-
-  element.style.display = "";
-  element.style.maxHeight = "";
-  element.style.overflow = "";
-  
-  requestAnimationFrame(() => {
-    element.style.opacity = "1";
-    element.style.transform = "translateX(0)";
-  });
-}
-
 function destroyNextStage() {
   if (destructionStage >= destructionStages.length) {
     return false;
   }
 
   const stage = destructionStages[destructionStage];
-  const element = stage.target();
 
-  if (!element) {
-    destructionStage++;
-    return destroyNextStage();
-  }
+  destructionHistory.push(destructionStage);
 
-  destructionHistory.push({
-    stage: destructionStage,
-    element
-  });
+  showToast("System Undo", stage.message);
 
-  showToast(
-    "System Undo",
-    stage.message
-  );
-
-  destroyElement(element);
+  stage.destroy();
 
   destructionStage++;
 
   updateSystemStatus();
+  updateHistoryUI();
 
   return true;
 }
@@ -403,20 +702,33 @@ function restorePreviousStage() {
     return false;
   }
 
-  const previous = destructionHistory.pop();
+  const prevStageIdx = destructionHistory.pop();
+  const stage = destructionStages[prevStageIdx];
 
-  restoreElement(previous.element);
+  stage.restore();
 
-  destructionStage = previous.stage;
+  destructionStage = prevStageIdx;
 
-  showToast(
-    "System Restored",
-    `${destructionStages[previous.stage].name} restored.`
-  );
+  showToast("System Restored", `${stage.name} restored.`);
 
   updateSystemStatus();
+  updateHistoryUI();
 
   return true;
+}
+
+function restoreAllWebsite() {
+  while (destructionHistory.length > 0) {
+    const prevStageIdx = destructionHistory.pop();
+    destructionStages[prevStageIdx].restore();
+  }
+
+  destructionStage = 0;
+
+  showToast("Website Restored", "All components restored.");
+
+  updateSystemStatus();
+  updateHistoryUI();
 }
 
 // ==========================================
@@ -429,10 +741,7 @@ function updateSystemStatus() {
 
   if (!statusBadge || !statusText) return;
 
-  statusBadge.classList.remove(
-    "status-ready",
-    "status-warning"
-  );
+  statusBadge.classList.remove("status-ready", "status-warning");
 
   if (destructionStage === 0) {
     statusBadge.classList.add("status-ready");
@@ -440,7 +749,7 @@ function updateSystemStatus() {
     return;
   }
 
-  if (destructionStage <= 2) {
+  if (destructionStage <= 15) {
     statusBadge.classList.add("status-warning");
     statusText.textContent = "Warning";
     return;
@@ -1078,6 +1387,17 @@ document.addEventListener("keydown", (event) => {
     redo();
   }
 });
+
+// ==========================================
+// REDO THE WEBSITE LINK (final state)
+// ==========================================
+
+if (redoWebsiteLink) {
+  redoWebsiteLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    restoreAllWebsite();
+  });
+}
 
 // ==========================================
 // SAVE BUTTON

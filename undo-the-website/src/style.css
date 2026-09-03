@@ -815,7 +815,7 @@ a {
 
   pointer-events: none;
 
-  z-index: 100;
+  z-index: 10000;
 
   transition:
     transform 350ms ease,
@@ -1608,4 +1608,63 @@ body.dark-mode .document-title {
     box-shadow:
       0 0 0 4px rgba(245, 158, 11, 0.12);
   }
+}
+
+/* ==========================================
+   SYSTEM UNDO — DESTROYED ELEMENTS
+   ========================================== */
+
+.destroyed-element {
+  opacity: 0 !important;
+  transform: translateX(10px) !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  pointer-events: none;
+}
+
+.destroyed-element-collapsed {
+  opacity: 0 !important;
+  transform: translateX(10px) !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none;
+}
+
+/* ==========================================
+   UNSTABLE UNDO BUTTON
+   ========================================== */
+
+@keyframes unstableShake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-2px, 1px) rotate(-1deg); }
+  20% { transform: translate(2px, -1px) rotate(1deg); }
+  30% { transform: translate(-1px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -2px) rotate(1deg); }
+  50% { transform: translate(-2px, 0px) rotate(-1deg); }
+  60% { transform: translate(2px, 1px) rotate(0deg); }
+  70% { transform: translate(-1px, -1px) rotate(-1deg); }
+  80% { transform: translate(1px, 2px) rotate(1deg); }
+  90% { transform: translate(-2px, -2px) rotate(0deg); }
+}
+
+@keyframes unstablePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  50% { box-shadow: 0 0 12px 3px rgba(239, 68, 68, 0.4); }
+}
+
+.unstable-undo {
+  animation:
+    unstableShake 150ms ease-in-out infinite,
+    unstablePulse 800ms ease-in-out infinite !important;
+  color: #ef4444 !important;
+  background: #fef2f2 !important;
+  border-color: #ef4444 !important;
+}
+
+body.dark-mode .unstable-undo {
+  color: #fca5a5 !important;
+  background: #450a0a !important;
 }
