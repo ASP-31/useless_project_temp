@@ -538,23 +538,41 @@ function performSystemUndo() {
 
     // ===== CSS =====
     case S.CSS_TEXT: {
+      // Save state for redo
       const wasDark = document.body.classList.contains("dark-mode");
       const prevBg = document.body.style.background;
+      const stylesheetLink = document.querySelector('link[href*="style.css"]');
+      const stylesheetHref = stylesheetLink ? stylesheetLink.getAttribute("href") : null;
+
       systemRedoStack.push({
         stage: S.CSS_TEXT,
         action: () => {
-          document.body.classList.remove("css-destroyed");
-          document.body.style.background = prevBg || "";
-          if (wasDark) document.body.classList.add("dark-mode");
-          if (editor) {
-            editor.classList.remove("text-corrupted");
-            editor.classList.add("text-uncorrupting");
-            setTimeout(() => editor.classList.remove("text-uncorrupting"), 550);
+          // Re-add the stylesheet
+          if (stylesheetHref && !document.querySelector('link[href*="style.css"]')) {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = stylesheetHref;
+            document.head.appendChild(link);
+            // Wait for stylesheet to load then restore state
+            link.onload = () => {
+              document.body.style.background = prevBg || "";
+              if (wasDark) document.body.classList.add("dark-mode");
+              document.body.classList.remove("css-destroyed");
+              if (editor) {
+                editor.classList.remove("text-corrupted");
+                editor.classList.add("text-uncorrupting");
+                setTimeout(() => editor.classList.remove("text-uncorrupting"), 550);
+              }
+            };
           }
         }
       });
+
+      // Corrupt the text first
       if (editor) editor.classList.add("text-corrupted");
+      // Remove dark mode
       document.body.classList.remove("dark-mode");
+      // Set glitchy background inline
       setTimeout(() => {
         const isDark = localStorage.getItem("undo_app_theme") === "dark";
         document.body.style.background = isDark
@@ -565,15 +583,59 @@ function performSystemUndo() {
     }
 
     case S.CSS_FILTER: {
+      // Remove ALL stylesheets — both <link> tags and Vite-injected <style> tags
+      // Save them for redo restoration
+      const allStyleLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+      const allStyleTags = Array.from(document.querySelectorAll('style'));
+
+      // Save original positions and content
+      const savedLinks = allStyleLinks.map(el => ({
+        href: el.getAttribute("href"),
+        parent: el.parentNode,
+        next: el.nextSibling
+      }));
+      const savedStyleTags = allStyleTags.map(el => ({
+        content: el.textContent,
+        parent: el.parentNode,
+        next: el.nextSibling
+      }));
+
       systemRedoStack.push({
         stage: S.CSS_FILTER,
         action: () => {
+          // Re-insert all <link> stylesheets
+          savedLinks.forEach(saved => {
+            if (!document.querySelector(`link[href="${saved.href}"]`)) {
+              const link = document.createElement("link");
+              link.rel = "stylesheet";
+              link.href = saved.href;
+              if (saved.next && saved.parent) {
+                saved.parent.insertBefore(link, saved.next);
+              } else if (saved.parent) {
+                saved.parent.appendChild(link);
+              }
+            }
+          });
+          // Re-insert all <style> tags
+          savedStyleTags.forEach(saved => {
+            const style = document.createElement("style");
+            style.textContent = saved.content;
+            if (saved.next && saved.parent) {
+              saved.parent.insertBefore(style, saved.next);
+            } else if (saved.parent) {
+              saved.parent.appendChild(style);
+            }
+          });
+          // Remove css-destroyed class and play restore animation
           document.body.classList.remove("css-destroyed");
           document.body.classList.add("css-restoring");
           setTimeout(() => document.body.classList.remove("css-restoring"), 850);
         }
       });
-      document.body.classList.add("css-destroyed");
+
+      // Remove all stylesheets — page becomes completely unstyled
+      allStyleLinks.forEach(el => el.remove());
+      allStyleTags.forEach(el => el.remove());
       break;
     }
 
