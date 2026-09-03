@@ -171,7 +171,7 @@ The editor currently supports:
 * Rename documents
 * Delete documents
 * Automatically persist documents using `localStorage`
-* Restore documents after page refresh
+* Restore documents after page refresh (unless the website is left broken — see System Undo below)
 
 ### Undo / Redo System
 
@@ -301,6 +301,7 @@ Features include:
 * Light/Dark theme toggle
 * Theme preference saved in `localStorage`
 * Theme restored automatically after refresh
+* The scrambled version achieved through redo is **persisted across refresh** — refreshing shows that scrambled layout, **not** the pristine default
 * Dark header
 * Dark sidebar
 * Dark editor

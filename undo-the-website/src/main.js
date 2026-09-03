@@ -84,6 +84,8 @@ const autoRebuildCount = document.getElementById("auto-rebuild-count");
 // ==========================================
 
 const STORAGE_KEY = "undo_app_docs_v1";
+const BROKEN_STAGE_KEY = "undo_app_broken_stage";
+const SCRAMBLE_KEY = "undo_app_scramble";
 
 function loadSavedDocuments() {
   try {
@@ -519,6 +521,61 @@ function undo() {
     systemUndoStage++;
     performSystemUndo();
     updateHistoryUI();
+    saveBrokenStage();
+  }
+}
+
+// Remember how far the website has been dismantled so a refresh keeps the
+// broken state instead of silently restoring the pristine version.
+function saveBrokenStage() {
+  try {
+    localStorage.setItem(BROKEN_STAGE_KEY, String(systemUndoStage));
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function clearBrokenStage() {
+  try {
+    localStorage.removeItem(BROKEN_STAGE_KEY);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+// On load, if the site was left broken, re-apply the destruction up to the
+// saved stage so a refresh does NOT bring back the correct/clean version.
+function applySavedBrokenState() {
+  const savedStage = parseInt(localStorage.getItem(BROKEN_STAGE_KEY), 10) || 0;
+  if (savedStage <= 0) return;
+  let guard = 0;
+  while (systemUndoStage < savedStage && guard < LAST_STAGE) {
+    systemUndoStage++;
+    performSystemUndo();
+    guard++;
+  }
+  updateHistoryUI();
+  updateUndoIndicatorState();
+}
+
+// On load, put each previously-scrambled component back into the wrong region
+// it had been dropped into, so the scrambled version achieved through redo is
+// what a refresh shows — not the pristine default layout.
+function applySavedScrambledState() {
+  let saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem(SCRAMBLE_KEY) || "{}");
+  } catch (e) {
+    saved = {};
+  }
+  if (!saved || typeof saved !== "object") saved = {};
+  for (const [id, regionId] of Object.entries(saved)) {
+    const el = document.getElementById(id);
+    const region = regionFromId(regionId);
+    if (el && region && !region.contains(el)) {
+      el.style.display = "";
+      region.appendChild(el);
+    }
   }
 }
 
@@ -624,7 +681,49 @@ function fadeOutElement(el, className = "item-fade-out", delay = 300) {
   setTimeout(() => {
     el.style.display = "none";
     el.classList.remove(className);
+    forgetScrambledPlacement(el);
   }, delay);
+}
+
+// ---------------------------------------------------------
+// SCRAMBLE PERSISTENCE
+// A component is tracked by its element id and mapped to the wrong region it
+// currently sits in. This survives a refresh so the scrambled version achieved
+// through redo is the one that comes back, not the pristine default.
+// ---------------------------------------------------------
+const scrambledPlacements = {};
+
+function regionIdOf(parent) {
+  if (!parent) return null;
+  if (parent === appHeader) return "app-header";
+  if (parent === sidebar) return "sidebar";
+  if (parent === appFooter) return "app-footer";
+  if (parent.classList && parent.classList.contains("workspace")) return "workspace";
+  return null;
+}
+
+function regionFromId(id) {
+  if (id === "app-header") return appHeader;
+  if (id === "sidebar") return sidebar;
+  if (id === "app-footer") return appFooter;
+  if (id === "workspace") return document.querySelector(".workspace");
+  return null;
+}
+
+function saveScrambledPlacements() {
+  try {
+    localStorage.setItem(SCRAMBLE_KEY, JSON.stringify(scrambledPlacements));
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+function forgetScrambledPlacement(el) {
+  if (!el) return;
+  if (el.id && scrambledPlacements[el.id]) {
+    delete scrambledPlacements[el.id];
+    saveScrambledPlacements();
+  }
 }
 
 // Redo brings parts back in the WRONG position — each restored component is
@@ -658,6 +757,13 @@ function scrambleIntoWrongSpot(el) {
   const pool = away.length ? away : targets;
   const target = pool[Math.floor(Math.random() * pool.length)];
   target.appendChild(el);
+
+  // Persist the wrong landing spot so a refresh keeps the scrambled version.
+  const region = regionIdOf(target);
+  if (region && el.id) {
+    scrambledPlacements[el.id] = region;
+    saveScrambledPlacements();
+  }
 }
 
 function fadeInElement(el, className = "item-fade-in", delay = 400) {
@@ -1245,8 +1351,10 @@ function performFinalRestore() {
     // The website is whole again — make sure the "beating" corrupted-text
     // animation is gone no matter whether the stylesheet onload callback fired.
     if (editor) editor.classList.remove("text-corrupted");
-    // Redo is done — the UNDO THE UNDO button goes away now.
+    // Redo is done — the UNDO THE UNDO button goes away now, and the site is
+    // whole again, so a future refresh should load the clean version.
     if (undoTheUndoBar) undoTheUndoBar.classList.remove("show");
+    clearBrokenStage();
     updateRedoStatus();
     updateUndoIndicatorState();
     updateHistoryUI();
@@ -1257,6 +1365,10 @@ function performFinalRestore() {
 
 function performSystemRedo() {
   if (systemRedoStack.length === 0) return;
+
+  // Once redoing starts, the undone stage no longer governs a refresh — the
+  // scrambled redo version built here is what should come back on reload.
+  clearBrokenStage();
 
   // Always make sure the app is visible (in whatever broken state it's in) and
   // the 404 overlay is gone — so every one of the ~40 single-component clicks
@@ -2315,6 +2427,13 @@ function applyTheme(theme) {
 
 const savedTheme = localStorage.getItem("undo_app_theme") || "light";
 applyTheme(savedTheme);
+
+// Re-apply any leftover broken (undone/scrambled) state so a refresh shows the
+// scrambled version achieved through redo — not the pristine default. The undo
+// stage replay runs first (for the still-undone case), then the scrambled
+// placements put every rebuilt component back into its wrong region.
+applySavedBrokenState();
+applySavedScrambledState();
 
 if (themeToggleBtn) {
   themeToggleBtn.addEventListener("click", () => {
