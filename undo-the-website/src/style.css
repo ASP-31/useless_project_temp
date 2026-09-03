@@ -1306,3 +1306,236 @@ a {
   display: grid;
   place-items: center;
 }
+
+/* ==========================================
+   DARK MODE
+   ========================================== */
+
+body.dark-mode {
+  --canvas: #0f172a;
+  --surface: #1e293b;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --indigo: #818cf8;
+  --indigo-light: #312e81;
+  --border: #334155;
+}
+
+/* Header */
+body.dark-mode .app-header {
+  background: var(--surface);
+  border-bottom-color: var(--border);
+}
+
+/* Brand */
+body.dark-mode .brand-icon {
+  background: #312e81;
+  color: #a5b4fc;
+}
+
+/* Status */
+body.dark-mode .status-ready {
+  color: #86efac;
+  background: #14532d;
+}
+
+/* Buttons */
+body.dark-mode .btn-outline {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+body.dark-mode .btn-secondary {
+  color: #cbd5e1;
+  background: #334155;
+}
+
+body.dark-mode .btn-secondary:hover {
+  background: #475569;
+}
+
+/* Sidebar */
+body.dark-mode .sidebar {
+  background: #172033;
+  border-right-color: var(--border);
+}
+
+body.dark-mode .sidebar-header {
+  color: #94a3b8;
+}
+
+body.dark-mode .sidebar-item {
+  color: #94a3b8;
+}
+
+body.dark-mode .sidebar-item:hover {
+  background: #263449;
+  color: var(--text);
+}
+
+body.dark-mode .sidebar-item.active {
+  color: #a5b4fc;
+  background: #312e81;
+}
+
+body.dark-mode .icon-btn:hover {
+  background: #334155;
+  color: var(--text);
+}
+
+body.dark-mode .add-document-btn:hover {
+  background: #312e81;
+  border-color: #4f46e5;
+}
+
+body.dark-mode .storage-bar {
+  background: #334155;
+}
+
+/* Workspace */
+body.dark-mode .workspace {
+  background: var(--canvas);
+}
+
+/* Editor */
+body.dark-mode .editor-card {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .editor-toolbar {
+  border-bottom-color: var(--border);
+}
+
+body.dark-mode .editor-actions {
+  border-top-color: var(--border);
+}
+
+body.dark-mode .text-editor {
+  color: var(--text);
+}
+
+body.dark-mode .text-editor p {
+  color: #cbd5e1;
+}
+
+/* Document title */
+body.dark-mode .document-title {
+  color: var(--text);
+}
+
+body.dark-mode .document-title:hover {
+  border-color: var(--border);
+}
+
+/* Toolbar */
+body.dark-mode .toolbar-btn {
+  color: #94a3b8;
+}
+
+body.dark-mode .toolbar-btn:hover {
+  color: #a5b4fc;
+  background: #312e81;
+}
+
+body.dark-mode .toolbar-btn.active {
+  color: #a5b4fc !important;
+  background: #312e81 !important;
+  box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.4);
+}
+
+/* Action buttons */
+body.dark-mode .action-btn:hover {
+  color: var(--text);
+  background: #334155;
+}
+
+body.dark-mode .action-btn.active {
+  color: #a5b4fc !important;
+  background: #312e81 !important;
+}
+
+/* Dividers */
+body.dark-mode .toolbar-divider,
+body.dark-mode .action-divider {
+  background: var(--border);
+}
+
+/* Dropdown menus */
+body.dark-mode .toolbar-menu,
+body.dark-mode .action-menu {
+  background: #1e293b;
+  border-color: var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .toolbar-menu button,
+body.dark-mode .action-menu button {
+  color: #e2e8f0;
+}
+
+body.dark-mode .toolbar-menu button:hover,
+body.dark-mode .action-menu button:hover {
+  background: #334155;
+}
+
+/* Undo indicator */
+body.dark-mode .undo-indicator {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: var(--border);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .undo-shortcuts {
+  color: #94a3b8;
+}
+
+body.dark-mode .undo-shortcuts kbd {
+  color: #cbd5e1;
+  background: #334155;
+  border-color: #475569;
+}
+
+body.dark-mode .history-counter {
+  border-left-color: var(--border);
+}
+
+/* Footer */
+body.dark-mode .app-footer {
+  background: var(--surface);
+  border-top-color: var(--border);
+}
+
+/* Theme button */
+.theme-toggle-btn {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+/* Smooth theme transition */
+body,
+.app-header,
+.sidebar,
+.workspace,
+.editor-card,
+.editor-toolbar,
+.editor-actions,
+.app-footer,
+.undo-indicator,
+.toolbar-menu,
+.action-menu {
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+body.dark-mode .brand-name,
+body.dark-mode .document-title {
+  color: #ffffff;
+}

@@ -47,6 +47,7 @@ const saveStatusText = document.getElementById("save-status-text");
 const systemToast = document.getElementById("system-toast");
 const toastTitle = document.getElementById("toast-title");
 const toastMessage = document.getElementById("toast-message");
+const themeToggleBtn = document.getElementById("theme-toggle-btn");
 
 // ==========================================
 // DOCUMENTS & LOCAL STORAGE
@@ -1005,3 +1006,37 @@ renderDocuments();
 saveState();
 updateHistoryUI();
 updateToolbarState();
+
+// ==========================================
+// DARK MODE
+// ==========================================
+
+function applyTheme(theme) {
+  const isDark = theme === "dark";
+
+  document.body.classList.toggle("dark-mode", isDark);
+
+  if (themeToggleBtn) {
+    themeToggleBtn.textContent = isDark ? "☀" : "☾";
+    themeToggleBtn.title = isDark
+      ? "Switch to light mode"
+      : "Switch to dark mode";
+    themeToggleBtn.setAttribute(
+      "aria-label",
+      isDark ? "Switch to light mode" : "Switch to dark mode"
+    );
+  }
+}
+
+const savedTheme = localStorage.getItem("undo_app_theme") || "light";
+applyTheme(savedTheme);
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener("click", () => {
+    const isDark = document.body.classList.toggle("dark-mode");
+    const theme = isDark ? "dark" : "light";
+
+    localStorage.setItem("undo_app_theme", theme);
+    applyTheme(theme);
+  });
+}
