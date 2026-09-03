@@ -1,0 +1,19 @@
+{
+  "name": "useless",
+  "version": "1.0.0",
+  "description": "<img width=\"1280\" height=\"640\" alt=\"git (1)\" src=\"https://github.com/user-attachments/assets/8920b256-2ba8-4988-b824-5351134eb4bd\" />",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ASP-31/useless_project_temp.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ASP-31/useless_project_temp/issues"
+  },
+  "homepage": "https://github.com/ASP-31/useless_project_temp#readme"
+}
