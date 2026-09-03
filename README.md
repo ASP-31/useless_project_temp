@@ -1,103 +1,240 @@
-<img width="1280" height="640" alt="git (1)" src="https://github.com/user-attachments/assets/8920b256-2ba8-4988-b824-5351134eb4bd" />
+# Undo the Website
 
+> **What if Ctrl+Z didn't know when to stop?**
 
+An intentionally useless web editor where Undo goes beyond undoing your work — it starts undoing the **website itself**.
 
-# [Project Name] 🎯
-
-
-## Basic Details
-### Team Name: [Name]
-
-
-### Team Members
-- Team Lead: [Name] - [College]
-- Member 2: [Name] - [College]
-- Member 3: [Name] - [College]
-
-### Project Description
-[2-3 lines about what your project does]
-
-### The Problem (that doesn't exist)
-[What ridiculous problem are you solving?]
-
-### The Solution (that nobody asked for)
-[How are you solving it? Keep it fun!]
-
-## Technical Details
-### Technologies/Components Used
-For Software:
-- [Languages used]
-- [Frameworks used]
-- [Libraries used]
-- [Tools used]
-
-For Hardware:
-- [List main components]
-- [List specifications]
-- [List tools required]
-
-### Implementation
-For Software:
-# Installation
-[commands]
-
-# Run
-[commands]
-
-### Project Documentation
-For Software:
-
-# Screenshots (Add at least 3)
-![Screenshot1](Add screenshot 1 here with proper name)
-*Add caption explaining what this shows*
-
-![Screenshot2](Add screenshot 2 here with proper name)
-*Add caption explaining what this shows*
-
-![Screenshot3](Add screenshot 3 here with proper name)
-*Add caption explaining what this shows*
-
-# Diagrams
-![Workflow](Add your workflow/architecture diagram here)
-*Add caption explaining your workflow*
-
-For Hardware:
-
-# Schematic & Circuit
-![Circuit](Add your circuit diagram here)
-*Add caption explaining connections*
-
-![Schematic](Add your schematic diagram here)
-*Add caption explaining the schematic*
-
-# Build Photos
-![Components](Add photo of your components here)
-*List out all components shown*
-
-![Build](Add photos of build process here)
-*Explain the build steps*
-
-![Final](Add photo of final product here)
-*Explain the final build*
-
-### Project Demo
-# Video
-[Add your demo video link here]
-*Explain what the video demonstrates*
-
-# Additional Demos
-[Add any extra demo materials/links]
-
-## Team Contributions
-- [Name 1]: [Specific contributions]
-- [Name 2]: [Specific contributions]
-- [Name 3]: [Specific contributions]
+Built for the **TinkerHub Useless Projects** hackathon.
 
 ---
-Made with ❤️ at TinkerHub Useless Projects 
 
-![Static Badge](https://img.shields.io/badge/TinkerHub-24?color=%23000000&link=https%3A%2F%2Fwww.tinkerhub.org%2F)
-![Static Badge](https://img.shields.io/badge/UselessProjects--26-26?link=https%3A%2F%2Ftinkerhub.org%2Fevents%2F1M8ORET9A1%2Fuseless-projects-3.0)
+## Basic Details
 
+### Team Name
 
+**4Bit**
 
+### Team Members
+
+* **Arjun S Pai**
+* **Ahmed Nasim**
+
+### Project Description
+
+A simple web-based editor with a normal Undo/Redo system.
+
+But once there is nothing left to undo, pressing **Ctrl+Z** activates **System Undo** — progressively removing the website itself until nothing remains.
+
+### The Problem (that doesn't exist)
+
+Modern software has one serious problem:
+
+> **Undo stops when you run out of things to undo.**
+
+Why should it?
+
+What if we could undo the toolbar?
+The sidebar?
+The CSS?
+The entire website?
+
+We decided this absolutely needed to be solved.
+
+### The Solution (that nobody asked for)
+
+**Undo the Website** takes Ctrl+Z way too seriously.
+
+After all user actions have been undone, the website begins undoing **itself**:
+
+```text
+USER HISTORY EXHAUSTED
+        ↓
+SYSTEM UNDO ACTIVATED
+        ↓
+Undoing footer...
+        ↓
+Undoing sidebar...
+        ↓
+Undoing CSS...
+        ↓
+Undoing toolbar...
+        ↓
+Undoing header...
+        ↓
+Undoing editor...
+        ↓
+UNDO BUTTON UNSTABLE
+        ↓
+404 — THIS WEBSITE HAS BEEN UNDONE
+```
+
+Please stop pressing Ctrl+Z.
+
+---
+
+## Technical Details
+
+### Technologies/Components Used
+
+**Languages**
+
+* HTML
+* CSS
+* JavaScript
+
+**Framework / Build Tool**
+
+* Vite
+
+**Libraries**
+
+* Vanilla JavaScript
+* GSAP *(if required for animations)*
+
+**Tools**
+
+* VS Code
+* Git
+* GitHub
+* Vercel / Netlify
+
+### Architecture
+
+The project intentionally uses a simple architecture:
+
+```text
+User Interaction
+       ↓
+   Editor State
+       ↓
+  History Stack
+       ↓
+   Undo / Redo
+       ↓
+History Exhausted?
+   ↙          ↘
+ No            Yes
+ ↓              ↓
+Normal Undo   System Undo
+                  ↓
+          Website Destruction
+                  ↓
+                 404
+```
+
+---
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ASP-31/useless_project_temp
+```
+
+Navigate into the project:
+
+```bash
+cd undo-the-website
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+---
+
+## Run
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open the local URL shown by Vite, usually:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## Project Documentation
+
+### Screenshots
+
+#### 1. Editor
+
+![Editor](screenshots/editor.png)
+
+*The normal editor before the website realizes what is about to happen.*
+
+#### 2. System Undo
+
+![System Undo](screenshots/system-undo.png)
+
+*The moment Ctrl+Z stops undoing user actions and starts undoing the application.*
+
+#### 3. Final State
+
+![Website Undone](screenshots/website-undone.png)
+
+*The inevitable result: the website has successfully undone itself.*
+
+---
+
+## Workflow
+
+![Workflow](screenshots/workflow.png)
+
+*The application transitions from normal user history to system-level destruction once the undo history is exhausted.*
+
+---
+
+## Project Demo
+
+### Video
+
+[Add demo video link here]
+
+*The demo shows normal editing, regular Undo/Redo, followed by the System Undo sequence that progressively destroys the website.*
+
+### Additional Demos
+
+* Live Demo: [Add deployed URL]
+* GitHub Repository: [Add repository URL]
+
+---
+
+## Team Contributions
+
+### Arjun S Pai
+
+* [Add specific contributions]
+
+### Ahmed Nasim
+
+* Project setup and development
+* Undo/Redo history system
+* System Undo logic
+* UI and destruction sequence
+* Testing and deployment
+
+---
+
+## Why?
+
+Because apparently,
+
+**Ctrl+Z wasn't powerful enough.**
+
+---
+
+Made with questionable decisions at **TinkerHub Useless Projects**.
+
+![TinkerHub](https://img.shields.io/badge/TinkerHub-Useless%20Projects-000000)
+
+![Useless Projects](https://img.shields.io/badge/UselessProjects--26-26-000000)
