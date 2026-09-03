@@ -51,46 +51,34 @@ We decided this absolutely needed to be solved.
 
 **Undo the Website** takes Ctrl+Z way too seriously.
 
-After all user actions have been undone, the website begins undoing **itself**.
+After all user actions have been undone, the website begins undoing **itself** — one tiny component at a time.
 
 ```text
 USER HISTORY EXHAUSTED
 
         ↓
 
-SYSTEM UNDO ACTIVATED
+SYSTEM UNDO ACTIVATED — 40 STAGES
 
         ↓
 
-Undoing footer...
-
+Footer: GitHub → Terms → Privacy → Status → Version → Entire footer
         ↓
-
-Undoing sidebar...
-
+Sidebar: Add Document → Storage → Doc List → Header → Entire sidebar
         ↓
-
-Undoing CSS...
-
+CSS: Text corruption → ACTUAL STYLESHEET REMOVED (raw HTML!)
         ↓
-
-Undoing toolbar...
-
+Actions: More → Download → Link → Emoji → Delete → Save
         ↓
-
-Undoing header...
-
+Toolbar: Clear → Color → Align → Underline → Bold → Style → Entire toolbar
         ↓
-
-Undoing editor...
-
+Editor: Content cleared → Editor card collapses with 3D perspective
         ↓
-
-UNDO BUTTON UNSTABLE
-
+Header: Export → Theme → Status → Title → Brand → Entire header
         ↓
-
-404 — THIS WEBSITE HAS BEEN UNDONE
+Indicator: Redo → Undo → Shortcuts → Counter → Entire indicator
+        ↓
+404 — WEBSITE UNDONE — Big Red Shaking REDO Button Appears
 ```
 
 Please stop pressing Ctrl+Z.
@@ -139,11 +127,16 @@ History Exhausted?
    ↙           ↘
  No             Yes
  ↓               ↓
-Normal Undo   System Undo
+Normal Undo   System Undo (40 stages)
                  ↓
-          Website Destruction
+     Individual Element Destruction
+     (fade-out, slide, 3D collapse, CSS removal)
                  ↓
-                404
+        404 — Big Red Shaking REDO Button
+                 ↓
+        Grouped Redo (8 shuffled groups)
+                 ↓
+        Website Rebuilt (random order)
 ```
 
 ---
@@ -196,6 +189,48 @@ Features include:
 * History handling for formatting operations
 
 The system also captures typing intelligently instead of creating a history entry for every individual character.
+
+### System Undo / Website Destruction
+
+The core feature of the project — when user history is exhausted, Ctrl+Z starts removing website components one by one across **40 granular stages**.
+
+#### Destruction Order (40 stages)
+
+```text
+FOOTER (6 stages):  GitHub → Terms → Privacy → Status → Version → Entire footer
+SIDEBAR (5 stages): Add Doc → Storage → Doc List → Header → Entire sidebar
+CSS (2 stages):     Text corruption → Stylesheet REMOVED (raw HTML)
+ACTIONS (6 stages): More → Download → Link → Emoji → Delete → Save
+TOOLBAR (7 stages): Clear → Color → Align → Underline → Bold → Style → Entire toolbar
+EDITOR (2 stages):  Content cleared → Editor card 3D collapse
+HEADER (6 stages):  Export → Theme → Status → Title → Brand → Entire header
+INDICATOR (5 stages): Redo → Undo → Shortcuts → Counter → Entire indicator
+FINAL (1 stage):    404 page with big red shaking REDO button
+```
+
+#### Redo / Website Rebuild
+
+After complete destruction, a **big red shaking REDO button** appears on the 404 page. Clicking it (or Ctrl+Y) restores the website in **8 randomized groups**:
+
+```text
+Group 1: App Frame (Header + Footer + Sidebar)
+Group 2: Header Internals (Brand + Title + Status + Buttons)
+Group 3: Sidebar Internals (Docs + Add Button + Storage)
+Group 4: Editor + Toolbar (Card + all formatting buttons)
+Group 5: Action Bar (Save + Delete + Emoji + Link + Download + More)
+Group 6: Content + CSS (Editor content + Stylesheet restored)
+Group 7: Undo Indicator (Indicator + Counter + Shortcuts + Buttons)
+Group 8: Footer Details (Version + Status + Privacy + Terms + GitHub)
+```
+
+Groups are **shuffled randomly** each time, so the rebuild order is different every session.
+
+#### Animations
+
+* **Destruction**: Fade-out, slide-out, 3D perspective collapse, CSS filter corruption, screen shake
+* **Restore**: Fade-in with bounce, slide-in, 3D perspective reverse, green pulse, stylesheet re-insertion
+* **Toast notifications**: Dramatic warnings (yellow) during undo, danger (red) for critical stages, green for restores
+* **Dark mode**: All animations and colors adapt to the current theme
 
 ### Editor Actions
 
@@ -335,21 +370,31 @@ Features include:
 * [x] Persistent theme preference
 * [x] Theme-aware UI components
 
+### Phase 6 — System Undo / Website Destruction
+
+* [x] 40-stage granular destruction sequence
+* [x] Individual element removal with fade-out animations
+* [x] CSS stylesheet actually removed (raw unstyled HTML)
+* [x] Screen shake on every undo step
+* [x] Dramatic toast notifications for each stage
+* [x] System status badge updates (Ready → Warning → Critical)
+* [x] Undo indicator warning/unstable states
+* [x] 404 page with big red shaking redo button
+* [x] Grouped redo system (8 groups, shuffled random order)
+* [x] Restore animations (fade-in, slide-in, 3D perspective reverse)
+* [x] Green pulse on each redo step
+* [x] Dark mode support for all destruction/restore animations
+* [x] Full redo capability (Ctrl+Y or redo button)
+
 ### Current Focus
 
-**System Undo / Website Destruction**
+**System Undo / Website Destruction — COMPLETE**
 
-The normal editor functionality and Undo/Redo foundation are now in place.
+The core concept of the project is fully implemented:
 
-The next major development stage is the core concept of the project:
+> **When user history reaches zero, Ctrl+Z stops undoing the document and starts undoing the website itself — one component at a time across 40 stages.**
 
-> **When user history reaches zero, Ctrl+Z should stop undoing the document and start undoing the website itself.**
-
-The destruction sequence will progressively remove or disable parts of the interface before reaching the final:
-
-```text
-404: Website Undone.
-```
+After complete destruction, a big red shaking REDO button appears. Clicking it restores the website in **randomized groups** — each rebuild order is different.
 
 ---
 

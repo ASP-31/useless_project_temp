@@ -9,7 +9,7 @@
       content="UndoApp — A text editor that doesn't know when to stop undoing."
     />
 
-    <title>UndoApp — Undo the Website</title>
+    <title>Texto — Undo the Website</title>
     <link rel="stylesheet" href="src/style.css">
   </head>
 
@@ -32,7 +32,7 @@
 
           <a href="#" id="brand-link" class="brand">
             <span class="brand-icon">↶</span>
-            <span class="brand-name">UndoApp</span>
+            <span class="brand-name">Texto</span>
           </a>
 
           <span id="system-status" class="status-badge status-ready">
@@ -366,15 +366,17 @@
                     </div>
                   </div>
 
-                </div>
+                  <div class="action-divider"></div>
 
-                <button
-                  id="save-btn"
-                  class="btn btn-primary save-btn"
-                  type="button"
-                >
-                  Save
-                </button>
+                  <button
+                    id="save-btn"
+                    class="btn btn-primary save-btn"
+                    type="button"
+                  >
+                    Save
+                  </button>
+
+                </div>
 
               </div>
 
@@ -478,8 +480,13 @@
         <div class="toast-content">
           <strong id="toast-title">System Message</strong>
           <span id="toast-message"></span>
+          <div id="toast-progress" class="toast-progress">
+            <div id="toast-progress-fill" class="toast-progress-fill"></div>
+          </div>
         </div>
       </div>
+
+      <div id="confetti-burst" class="confetti-burst"></div>
 
 
       <!-- ================= FINAL STATE ================= -->
@@ -489,9 +496,11 @@
 
         <p>There is nothing left to undo.</p>
 
-        <a href="#" id="redo-website">
-          [ Press Ctrl+Y to Redo the Website ]
-        </a>
+        <button id="big-redo-btn" class="big-redo-btn" type="button">
+          ↻ REDO
+        </button>
+
+        <p class="redo-hint">or press <kbd>Ctrl</kbd> + <kbd>Y</kbd></p>
 
       </div>
 

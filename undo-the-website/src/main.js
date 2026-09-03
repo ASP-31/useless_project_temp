@@ -73,6 +73,7 @@ const editorToolbar = document.getElementById("editor-toolbar");
 const editorActions = document.getElementById("editor-actions");
 const undoShortcuts = document.getElementById("undo-shortcuts");
 const historyCounterEl = document.getElementById("history-counter");
+const bigRedoBtn = document.getElementById("big-redo-btn");
 
 // ==========================================
 // DOCUMENTS & LOCAL STORAGE
@@ -191,13 +192,6 @@ function setCaretOffset(element, offset) {
 // USER HISTORY (UNDO / REDO ENGINE)
 // ==========================================
 
-const history = [];
-const redoHistory = [];
-let saveStateTimeout = null;
-let isTyping = false;
-let systemUndoStage = 0;
-const systemRedoStack = []; // Stores {stage, action} for each removed element
-
 const SYSTEM_UNDO_STAGES = {
   // Footer
   FOOTER_GITHUB: 1,
@@ -251,6 +245,167 @@ const SYSTEM_UNDO_STAGES = {
 };
 
 const LAST_STAGE = SYSTEM_UNDO_STAGES.DONE;
+
+const history = [];
+const redoHistory = [];
+let saveStateTimeout = null;
+let isTyping = false;
+let systemUndoStage = 0;
+const systemRedoStack = []; // Stores {stage, action} for each removed element
+
+// Redo fun-state
+let restoredStageCount = 0; // How many stages restored so far
+let redoTotalStages = 0; // Total stages to restore (calculated on reset)
+let redoCombo = 0; // Combo count for rapid clicking
+let lastRedoTime = 0; // Timestamp of last redo click
+let milestoneFired = new Set(); // Which milestone % already celebrated
+let redoQueue = []; // Flat ordered list of {phase, stage} to restore, in dependency order
+let redoQueueIndex = 0; // Next stage to restore
+let redoCurrentPhase = null; // Phase currently being restored (for toasts)
+
+// Redo phases — theming + ordering only. Each redo CLICK restores exactly ONE
+// component, so the site visibly gets reassembled piece by piece. Phases run in
+// a random order, but the stages *within* a phase stay in dependency order so
+// containers always restore before what lives inside them.
+const REDO_PHASES = [
+  {
+    name: "Foundation",
+    emoji: "🧱",
+    flavor: "Rebuilding the frame...",
+    stages: [SYSTEM_UNDO_STAGES.HEADER, SYSTEM_UNDO_STAGES.FOOTER, SYSTEM_UNDO_STAGES.SIDEBAR],
+  },
+  {
+    name: "Identity",
+    emoji: "🏷️",
+    flavor: "Restoring the brand...",
+    stages: [SYSTEM_UNDO_STAGES.HEADER_BRAND, SYSTEM_UNDO_STAGES.HEADER_TITLE, SYSTEM_UNDO_STAGES.HEADER_STATUS],
+  },
+  {
+    name: "Controls",
+    emoji: "🎛️",
+    flavor: "Wiring up the buttons...",
+    stages: [SYSTEM_UNDO_STAGES.HEADER_THEME, SYSTEM_UNDO_STAGES.HEADER_EXPORT],
+  },
+  {
+    name: "File Cabinet",
+    emoji: "📁",
+    flavor: "Reopening your documents...",
+    stages: [SYSTEM_UNDO_STAGES.SIDEBAR_HEADER, SYSTEM_UNDO_STAGES.SIDEBAR_DOCS, SYSTEM_UNDO_STAGES.SIDEBAR_ADD_BTN, SYSTEM_UNDO_STAGES.SIDEBAR_STORAGE],
+  },
+  {
+    name: "Workspace",
+    emoji: "🖥️",
+    flavor: "Restoring the editor card...",
+    stages: [SYSTEM_UNDO_STAGES.EDITOR_CARD],
+  },
+  {
+    name: "Formatting",
+    emoji: "✒️",
+    flavor: "Reassembling the toolbar...",
+    stages: [SYSTEM_UNDO_STAGES.TOOLBAR, SYSTEM_UNDO_STAGES.TOOLBAR_STYLE, SYSTEM_UNDO_STAGES.TOOLBAR_BOLD, SYSTEM_UNDO_STAGES.TOOLBAR_UNDERLINE, SYSTEM_UNDO_STAGES.TOOLBAR_ALIGN, SYSTEM_UNDO_STAGES.TOOLBAR_COLOR, SYSTEM_UNDO_STAGES.TOOLBAR_CLEAR],
+  },
+  {
+    name: "Actions",
+    emoji: "⚡",
+    flavor: "Restoring quick actions...",
+    stages: [SYSTEM_UNDO_STAGES.ACTIONS_SAVE, SYSTEM_UNDO_STAGES.ACTIONS_DELETE, SYSTEM_UNDO_STAGES.ACTIONS_EMOJI, SYSTEM_UNDO_STAGES.ACTIONS_LINK, SYSTEM_UNDO_STAGES.ACTIONS_DOWNLOAD, SYSTEM_UNDO_STAGES.ACTIONS_MORE],
+  },
+  {
+    name: "Content",
+    emoji: "📝",
+    flavor: "Recovering your words...",
+    stages: [SYSTEM_UNDO_STAGES.EDITOR_CLEAR],
+  },
+  {
+    name: "Stylesheet",
+    emoji: "🎨",
+    flavor: "Rebuilding the stylesheet...",
+    stages: [SYSTEM_UNDO_STAGES.CSS_FILTER, SYSTEM_UNDO_STAGES.CSS_TEXT],
+  },
+  {
+    name: "Undo System",
+    emoji: "⏪",
+    flavor: "Restoring undo infrastructure...",
+    stages: [SYSTEM_UNDO_STAGES.INDICATOR, SYSTEM_UNDO_STAGES.INDICATOR_COUNT, SYSTEM_UNDO_STAGES.INDICATOR_SHORTCUTS, SYSTEM_UNDO_STAGES.INDICATOR_UNDO, SYSTEM_UNDO_STAGES.INDICATOR_REDO],
+  },
+  {
+    name: "Fine Print",
+    emoji: "🔍",
+    flavor: "Restoring the fine print...",
+    stages: [SYSTEM_UNDO_STAGES.FOOTER_LEFT, SYSTEM_UNDO_STAGES.FOOTER_CENTER, SYSTEM_UNDO_STAGES.FOOTER_PRIVACY, SYSTEM_UNDO_STAGES.FOOTER_TERMS, SYSTEM_UNDO_STAGES.FOOTER_GITHUB],
+  },
+];
+
+// Final phase — the site is fully back, wipe the "4 0 4" screen
+const REDO_FINAL_PHASE = {
+  name: "Rebirth",
+  emoji: "✨",
+  flavor: "The website lives again...",
+  stages: [SYSTEM_UNDO_STAGES.DONE],
+};
+
+// Purely cosmetic flavor text for each component being restored
+const RESTORE_FLAVOR = {
+  [SYSTEM_UNDO_STAGES.HEADER]: "Header reassembled. Navigation is legal again.",
+  [SYSTEM_UNDO_STAGES.FOOTER]: "Footer slid back into place.",
+  [SYSTEM_UNDO_STAGES.SIDEBAR]: "Sidebar regained its confidence.",
+  [SYSTEM_UNDO_STAGES.HEADER_BRAND]: "The UndoApp brand is back on the shelf.",
+  [SYSTEM_UNDO_STAGES.HEADER_TITLE]: "Document title re-inked.",
+  [SYSTEM_UNDO_STAGES.HEADER_STATUS]: "System status: pretending to be chill.",
+  [SYSTEM_UNDO_STAGES.HEADER_THEME]: "Theme toggle rebooted. Eyes saved.",
+  [SYSTEM_UNDO_STAGES.HEADER_EXPORT]: "Export gave print a second chance.",
+  [SYSTEM_UNDO_STAGES.SIDEBAR_HEADER]: "Folder label reattached.",
+  [SYSTEM_UNDO_STAGES.SIDEBAR_DOCS]: "Your documents stopped hiding.",
+  [SYSTEM_UNDO_STAGES.SIDEBAR_ADD_BTN]: "The Add button remembers how to multiply docs.",
+  [SYSTEM_UNDO_STAGES.SIDEBAR_STORAGE]: "Storage meter regained its sense of scale.",
+  [SYSTEM_UNDO_STAGES.EDITOR_CARD]: "The editor card rolled back upright.",
+  [SYSTEM_UNDO_STAGES.TOOLBAR]: "Toolbar stitched back together.",
+  [SYSTEM_UNDO_STAGES.TOOLBAR_STYLE]: "Text-style dropdown unbroke its hinges.",
+  [SYSTEM_UNDO_STAGES.TOOLBAR_BOLD]: "Bold is confident once more.",
+  [SYSTEM_UNDO_STAGES.TOOLBAR_UNDERLINE]: "Underline stopped wavering.",
+  [SYSTEM_UNDO_STAGES.TOOLBAR_ALIGN]: "Alignment controls sobered up.",
+  [SYSTEM_UNDO_STAGES.TOOLBAR_COLOR]: "The color palette returned from vacation.",
+  [SYSTEM_UNDO_STAGES.TOOLBAR_CLEAR]: "Clear Formatting ready to erase responsibly.",
+  [SYSTEM_UNDO_STAGES.ACTIONS_SAVE]: "Save is clutching its backup again.",
+  [SYSTEM_UNDO_STAGES.ACTIONS_DELETE]: "Delete reintegrated into society.",
+  [SYSTEM_UNDO_STAGES.ACTIONS_EMOJI]: "Emoji picker crawled back from the void.",
+  [SYSTEM_UNDO_STAGES.ACTIONS_LINK]: "The link button found its anchor.",
+  [SYSTEM_UNDO_STAGES.ACTIONS_DOWNLOAD]: "Download got its download groove back.",
+  [SYSTEM_UNDO_STAGES.ACTIONS_MORE]: "The 'more' options revealed themselves.",
+  [SYSTEM_UNDO_STAGES.EDITOR_CLEAR]: "Your words materialized out of thin air.",
+  [SYSTEM_UNDO_STAGES.CSS_FILTER]: "Stylesheets re-injected. Crayons sharpened.",
+  [SYSTEM_UNDO_STAGES.CSS_TEXT]: "Text styles un-corrupted. Letters behave again.",
+  [SYSTEM_UNDO_STAGES.INDICATOR]: "The undo system stands back up.",
+  [SYSTEM_UNDO_STAGES.INDICATOR_COUNT]: "History counter is counting again.",
+  [SYSTEM_UNDO_STAGES.INDICATOR_SHORTCUTS]: "Ctrl+Z and Ctrl+Y reconciled.",
+  [SYSTEM_UNDO_STAGES.INDICATOR_UNDO]: "Undo button cooled down.",
+  [SYSTEM_UNDO_STAGES.INDICATOR_REDO]: "Redo button ready for round two.",
+  [SYSTEM_UNDO_STAGES.FOOTER_LEFT]: "Version stamp re-chiseled.",
+  [SYSTEM_UNDO_STAGES.FOOTER_CENTER]: "System status returned to operational.",
+  [SYSTEM_UNDO_STAGES.FOOTER_PRIVACY]: "Privacy got a second coat of legal.",
+  [SYSTEM_UNDO_STAGES.FOOTER_TERMS]: "Terms accepted their terms.",
+  [SYSTEM_UNDO_STAGES.FOOTER_GITHUB]: "GitHub link lives again. Fork it, sim.",
+  [SYSTEM_UNDO_STAGES.DONE]: "Everything restored. The website is whole.",
+};
+
+// Random glitch interruptions to make the rebuild feel alive
+const GLITCH_EVENTS = [
+  { message: "⚡ Static surge — re-routing...", duration: 70 },
+  { message: "⚠ Memory fragment recompiled", duration: 60 },
+  { message: "⌛ Syncing parallel timeline...", duration: 90 },
+  { message: "🌀 Reversing entropy... hold on", duration: 80 },
+  { message: "🔧 Patching a 404-shaped hole...", duration: 70 },
+  { message: "🛠️ Realigning DOM gravity...", duration: 75 },
+  { message: "📡 Signal lost... reacquired.", duration: 60 },
+];
+
+// Milestones worth celebrating
+const REDO_MILESTONES = [
+  { at: 0.25, title: "1/4 Rebuilt!", msg: "25% of the website has crawled out of the void.", emoji: "🎉" },
+  { at: 0.5, title: "Halfway there!", msg: "50% restored. The website can almost stand.", emoji: "🎊" },
+  { at: 0.75, title: "3/4 Rebuilt!", msg: "75% assembled. The buttons are getting restless.", emoji: "🥳" },
+  { at: 1, title: "Website Reborn!", msg: "100% restored. UndoApp lives to be undone again.", emoji: "🌍" },
+];
 
 // System undo toast messages — dramatic!
 const SYSTEM_UNDO_MESSAGES = {
@@ -400,6 +555,31 @@ function updateSystemStatusRestore(stage) {
   }, 600);
 }
 
+// Redo-aware status: reflects how much of the site is still broken, so the
+// badge meaningfully stays "Critical" while it's being rebuilt and only turns
+// "Ready" once everything is back. Remaining is derived from the live redo
+// stack, so it stays accurate even if the redo only covers a partial undo.
+function updateRedoStatus() {
+  if (!systemStatus) return;
+
+  const remaining = systemRedoStack.length;
+  const total = redoTotalStages > 0 ? redoTotalStages : (remaining + restoredStageCount);
+  systemStatus.classList.remove("status-ready", "status-warning", "status-danger", "status-restoring");
+
+  let label = "Critical";
+  let cls = "status-danger";
+  if (remaining === 0) {
+    label = "Ready";
+    cls = "status-ready";
+  } else if (total > 0 && remaining <= Math.ceil(total * 0.15)) {
+    // Under 15% left broken — almost there, downgrade to warning
+    label = "Warning";
+    cls = "status-warning";
+  }
+  systemStatus.classList.add(cls);
+  systemStatus.innerHTML = `<span class="status-dot"></span> ${label}`;
+}
+
 function updateUndoIndicatorState() {
   if (!undoIndicator) return;
   undoIndicator.classList.remove("warning", "unstable");
@@ -424,6 +604,14 @@ function updateUndoIndicatorState() {
   }
 }
 
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function fadeOutElement(el, className = "item-fade-out", delay = 300) {
   if (!el) return;
   el.classList.add(className);
@@ -433,12 +621,47 @@ function fadeOutElement(el, className = "item-fade-out", delay = 300) {
   }, delay);
 }
 
+// Redo brings parts back in the WRONG position — each restored component is
+// dropped into a random region of the page instead of its real home. The result
+// is a scrambled mess, and the only proper way to set it right is to wipe
+// localStorage. The app must stay in DOM (undo/redo refs still work), so we
+// move elements between region containers but never nest a region inside itself.
+function scrambleIntoWrongSpot(el) {
+  if (!el || !el.parentNode || !document.body) return;
+
+  // The page's "scrap bucket" regions a component can get dropped into.
+  const workspace = document.querySelector(".workspace");
+  const regions = [
+    appHeader,
+    sidebar,
+    workspace,
+    appFooter
+  ].filter(Boolean);
+
+  // Never scramble a structural region container itself — only its contents.
+  if (regions.includes(el)) return;
+
+  // Exclude targets that would nest the element inside itself or its relatives.
+  const targets = regions.filter(t =>
+    t !== el && !t.contains(el) && !(el.contains(t))
+  );
+  if (targets.length === 0) return;
+
+  // Prefer a target that actually relocates the element somewhere new.
+  const away = targets.filter(t => t !== el.parentNode);
+  const pool = away.length ? away : targets;
+  const target = pool[Math.floor(Math.random() * pool.length)];
+  target.appendChild(el);
+}
+
 function fadeInElement(el, className = "item-fade-in", delay = 400) {
   if (!el) return;
   el.style.display = "";
   el.classList.remove("item-fade-out");
   el.classList.add(className);
   setTimeout(() => el.classList.remove(className), delay);
+  // Restored components land in a random wrong spot until local storage is cleared.
+  scrambleIntoWrongSpot(el);
 }
 
 function performSystemUndo() {
@@ -889,8 +1112,23 @@ function performSystemUndo() {
       if (app) app.style.display = "none";
       if (finalState) finalState.classList.add("visible", "dramatic-entrance");
       if (historyCount) historyCount.textContent = "0";
-      updateSystemStatus(0);
-      showToast("💀 Website Undone", "There is nothing left to undo. Press Ctrl+Y to redo the website.", 5000, "danger");
+      // Fully destroyed — show Critical, not Ready
+      systemStatus.classList.remove("status-ready", "status-warning", "status-restoring");
+      systemStatus.classList.add("status-danger");
+      systemStatus.innerHTML = '<span class="status-dot"></span> Critical';
+
+      // Build a random-order restore queue, one component per redo click
+      buildRedoQueue();
+      restoredStageCount = 0;
+      redoTotalStages = systemRedoStack.length;
+      redoCombo = 0;
+      lastRedoTime = 0;
+      redoCurrentPhase = null;
+      milestoneFired = new Set();
+      const progFill = document.getElementById("toast-progress-fill");
+      if (progFill) progFill.style.width = "0%";
+
+      showToast("💀 Website Undone", "Click the button or press Ctrl+Y to redo the website.", 5000, "danger");
       break;
   }
 
@@ -898,14 +1136,84 @@ function performSystemUndo() {
   setTimeout(() => updateUndoIndicatorState(), 100);
 }
 
-function performSystemRedo() {
-  if (systemRedoStack.length === 0) return;
+function fireConfetti() {
+  const burst = document.getElementById("confetti-burst");
+  if (!burst) return;
+  burst.innerHTML = "";
+  const colors = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#10b981", "#a855f7"];
+  for (let i = 0; i < 42; i++) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.left = `${50 + (Math.random() - 0.5) * 40}%`;
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = `${(Math.random() * 0.25).toFixed(2)}s`;
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    burst.appendChild(piece);
+  }
+  burst.classList.add("firing");
+  setTimeout(() => burst.classList.remove("firing"), 1400);
+}
 
-  // Pop the last removed element from the stack — restores in exact reverse order
-  const entry = systemRedoStack.pop();
+function triggerGlitchEvent() {
+  // Only a sometimes-event so it never drowns out the restore UI
+  if (Math.random() > 0.3) return;
+  const event = GLITCH_EVENTS[Math.floor(Math.random() * GLITCH_EVENTS.length)];
+  if (!app) return;
+  app.classList.add("screen-glitch");
+  // Use a short, low-key toast that won't fight the phase/main toast
+  showToast("🔧 Rebuild Gremlin", event.message, 1100, "warning");
+  setTimeout(() => app.classList.remove("screen-glitch"), event.duration + 100);
+}
+
+function restoreSingleStage(stage) {
+  const idx = systemRedoStack.findIndex(e => e.stage === stage);
+  if (idx === -1) return null;
+  const entry = systemRedoStack.splice(idx, 1)[0];
   systemUndoStage = entry.stage - 1;
+  entry.action();
+  restoredStageCount++;
+  return entry;
+}
 
-  // Pulse the screen green on each restore
+function buildRedoQueue() {
+  // Build a flat, ordered list of one component per redo click. Phases are
+  // shuffled into a random order, but stages within a phase keep dependency
+  // order (containers before their children).
+  const shuffled = shuffleArray([...REDO_PHASES.map(p => ({ ...p, stages: [...p.stages] }))]);
+  redoQueue = [];
+  for (const phase of shuffled) {
+    for (const stage of phase.stages) {
+      redoQueue.push({ phase, stage });
+    }
+  }
+  redoQueueIndex = 0;
+}
+
+// Show the app in its current (broken) state and hide the 404 overlay, so the
+// user watches the skeleton get reassembled one component per click instead of
+// the whole site popping in only at the very end.
+function revealBrokenSite() {
+  if (app) {
+    app.style.display = "";
+    app.style.opacity = "1";
+  }
+  if (finalState) {
+    finalState.classList.remove("visible", "dramatic-entrance", "dramatic-exit");
+  }
+}
+
+// Restore the final "Rebirth" (DONE) stage. This is the last component — after
+// it, every stage is back, so the status badge correctly flips to Ready and the
+// 100% milestone fires.
+function performFinalRestore() {
+  const idx = systemRedoStack.findIndex(e => e.stage === SYSTEM_UNDO_STAGES.DONE);
+  if (idx === -1) return;
+  const entry = systemRedoStack.splice(idx, 1)[0];
+  systemUndoStage = entry.stage - 1;
+  entry.action();
+  restoredStageCount++;
+
+  // Pulse the screen green for the finish
   if (app) {
     app.classList.remove("restore-pulse");
     void app.offsetWidth;
@@ -913,21 +1221,157 @@ function performSystemRedo() {
     setTimeout(() => app.classList.remove("restore-pulse"), 650);
   }
 
-  // Show a restore toast with the name of what's being restored
-  const toastMsg = SYSTEM_UNDO_MESSAGES[entry.stage];
-  const restoredName = toastMsg ? toastMsg.message.replace("Undoing ", "Restoring ").replace("...", "...") : "Restoring...";
-  showToast("↻ Redo", restoredName, 1500, "restore");
+  setTimeout(() => {
+    const flavor = RESTORE_FLAVOR[SYSTEM_UNDO_STAGES.DONE];
+    if (flavor) {
+      showToast(`↻ ${REDO_FINAL_PHASE.emoji} ${REDO_FINAL_PHASE.name}`, flavor, 4000, "restore");
+    }
+    updateRedoStatus();
+    updateUndoIndicatorState();
+    updateHistoryUI();
+    updateToolbarState();
+    checkRedoMilestones();
+  }, 60);
+}
 
-  // Update status to restoring state
-  updateSystemStatusRestore(systemUndoStage);
+function performSystemRedo() {
+  if (systemRedoStack.length === 0) return;
 
-  // Execute the stored restore action
-  entry.action();
+  // Always make sure the app is visible (in whatever broken state it's in) and
+  // the 404 overlay is gone — so every one of the ~40 single-component clicks
+  // is visible on screen, progressively rebuilding the site.
+  revealBrokenSite();
 
-  // Update all UI state
-  updateUndoIndicatorState();
-  updateHistoryUI();
-  updateToolbarState();
+  const queueExhausted = redoQueue.length === 0 || redoQueueIndex >= redoQueue.length;
+  const donePending = systemRedoStack.some(e => e.stage === SYSTEM_UNDO_STAGES.DONE);
+
+  // ----- Final phase: once every normal component is back, restore the site's
+  // rebirth (DONE) WITHOUT resetting the session, so the progress/status
+  // tracking survives to show "Ready" at the very end. -----
+  if (queueExhausted && donePending) {
+    performFinalRestore();
+    return;
+  }
+
+  // ----- Lazy-init / validate the redo queue -----
+  // Rebuild the queue if it's empty (e.g. redo clicked mid-undo, before the
+  // full 404 collapse) or if it no longer matches the pending stack.
+  if (queueExhausted) {
+    buildRedoQueue();
+    restoredStageCount = 0;
+    redoTotalStages = systemRedoStack.length;
+    milestoneFired = new Set();
+    redoCurrentPhase = null;
+    redoCombo = 0;
+    lastRedoTime = 0;
+  }
+
+  // ----- Combo detection: fast clicking restores an extra component -----
+  const now = Date.now();
+  if (lastRedoTime > 0 && now - lastRedoTime < 900) {
+    redoCombo++;
+  } else {
+    redoCombo = 0;
+  }
+  lastRedoTime = now;
+  const comboBonus = Math.min(2, Math.floor(redoCombo / 4)); // every 4 fast clicks = +1 extra component
+
+  // ----- Pick the next components to restore -----
+  const toRestore = [];
+  // Primary: next stage in the queue (skipping any already gone from the stack)
+  while (toRestore.length === 0 && redoQueueIndex < redoQueue.length) {
+    const item = redoQueue[redoQueueIndex];
+    redoQueueIndex++;
+    if (systemRedoStack.some(e => e.stage === item.stage)) toRestore.push(item);
+  }
+  // Combo: pull extra pending components
+  for (let c = 0; c < comboBonus && redoQueueIndex < redoQueue.length; c++) {
+    const item = redoQueue[redoQueueIndex];
+    redoQueueIndex++;
+    if (systemRedoStack.some(e => e.stage === item.stage)) toRestore.push(item);
+  }
+  if (toRestore.length === 0) return;
+
+  // Pulse the screen softly on every component
+  if (app) {
+    app.classList.remove("restore-pulse");
+    void app.offsetWidth;
+    app.classList.add("restore-pulse");
+    setTimeout(() => app.classList.remove("restore-pulse"), 650);
+  }
+
+  // Track the phase being worked on for a themed header when it starts
+  const phase = toRestore[0].phase;
+  if (redoCurrentPhase !== phase || redoCurrentPhase === null) {
+    redoCurrentPhase = phase;
+    showToast(`↻ ${phase.emoji} ${phase.name}`, phase.flavor, 1800, "restore");
+  }
+
+  // Maybe trigger a glitch moment on the genuinely CPU-heavy restores only
+  const isGlitchy = toRestore.some(i =>
+    i.stage === SYSTEM_UNDO_STAGES.CSS_FILTER
+    || i.stage === SYSTEM_UNDO_STAGES.CSS_TEXT
+    || i.stage === SYSTEM_UNDO_STAGES.EDITOR_CARD
+  );
+  if (isGlitchy) triggerGlitchEvent();
+
+  // Restore each selected component (with a tiny stagger so a combo feels alive)
+  let delay = 0;
+  const step = Math.min(40, Math.max(12, 140 / toRestore.length));
+  toRestore.forEach((item) => {
+    setTimeout(() => {
+      restoreSingleStage(item.stage);
+    }, delay);
+    delay += step;
+  });
+
+  // Finalize UI after the stagger + show per-component flavor
+  setTimeout(() => {
+    const last = toRestore[toRestore.length - 1];
+    const flavor = RESTORE_FLAVOR[last.stage];
+    if (flavor) {
+      showToast(
+        toRestore.length > 1
+          ? `↻ Restored ${toRestore.length} parts`
+          : `↻ ${phase.emoji} ${phase.name}`,
+        flavor,
+        2000,
+        "restore"
+      );
+    }
+    if (redoTotalStages > 0) {
+      const pct = Math.min(100, Math.round((restoredStageCount / redoTotalStages) * 100));
+      const bar = document.getElementById("toast-progress-fill");
+      if (bar) bar.style.width = `${pct}%`;
+    }
+    updateRedoStatus();
+    updateUndoIndicatorState();
+    updateHistoryUI();
+    updateToolbarState();
+    checkRedoMilestones();
+  }, delay);
+}
+
+function checkRedoMilestones() {
+  if (redoTotalStages === 0) return;
+  const pct = restoredStageCount / redoTotalStages;
+  const bar = document.getElementById("toast-progress-fill");
+  if (bar) bar.style.width = `${Math.min(100, Math.round(pct * 100))}%`;
+
+  for (const m of REDO_MILESTONES) {
+    if (pct >= m.at && !milestoneFired.has(m.at)) {
+      milestoneFired.add(m.at);
+      if (m.at >= 1) {
+        // Final celebration
+        fireConfetti();
+        showToast(`${m.emoji} ${m.title}`, `${m.msg} ${restoredStageCount}/${redoTotalStages} components back.`, 4000, "restore");
+      } else {
+        fireConfetti();
+        showToast(`${m.emoji} ${m.title}`, `${m.msg} ${restoredStageCount}/${redoTotalStages} components back.`, 3000, "restore");
+      }
+      break;
+    }
+  }
 }
 
 function redo() {
@@ -1599,6 +2043,15 @@ if (redoBtn) {
       performSystemRedo();
     } else {
       redo();
+    }
+  });
+}
+
+// Big Red Redo Button on final state
+if (bigRedoBtn) {
+  bigRedoBtn.addEventListener("click", () => {
+    if (systemRedoStack.length > 0) {
+      performSystemRedo();
     }
   });
 }
