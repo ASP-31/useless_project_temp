@@ -65,6 +65,62 @@ const footerLeft = document.querySelector(".footer-left");
 let destructionStage = 0;
 let destructionHistory = [];
 
+// ==========================================
+// SYSTEM UNDO PERSISTENCE
+// ==========================================
+
+const SYSTEM_UNDO_KEY = "undo_app_system_undo_v1";
+
+function saveDestructionState() {
+  try {
+    localStorage.setItem(
+      SYSTEM_UNDO_KEY,
+      JSON.stringify({
+        stage: destructionStage,
+        history: destructionHistory,
+      })
+    );
+  } catch (e) {
+    console.error("Failed to save system undo state", e);
+  }
+}
+
+function clearDestructionState() {
+  try {
+    localStorage.removeItem(SYSTEM_UNDO_KEY);
+  } catch (e) {
+    console.error("Failed to clear system undo state", e);
+  }
+}
+
+function reapplyDestructionState() {
+  try {
+    const raw = localStorage.getItem(SYSTEM_UNDO_KEY);
+    if (!raw) return false;
+
+    const saved = JSON.parse(raw);
+    if (typeof saved.stage !== "number" || saved.stage <= 0) return false;
+
+    destructionStage = saved.stage;
+    destructionHistory = Array.isArray(saved.history)
+      ? saved.history.filter((i) => typeof i === "number")
+      : Array.from({ length: saved.stage }, (_, i) => i);
+
+    // Silently re-apply every destroyed stage (no toasts / animations).
+    for (let i = 0; i < destructionStage; i++) {
+      destructionStages[i].destroy();
+    }
+
+    updateSystemStatus();
+    updateHistoryUI();
+
+    return true;
+  } catch (e) {
+    console.error("Failed to reapply destruction state", e);
+    return false;
+  }
+}
+
 function hideElement(el) {
   if (!el) return;
   el.classList.add("glitch");
@@ -72,6 +128,10 @@ function hideElement(el) {
     el.dataset.destroyed = "true";
     el.classList.add("destroyed-element");
     el.classList.remove("glitch");
+
+    // Also apply inline styles so hiding works even after CSS is removed.
+    el.style.opacity = "0";
+    el.style.display = "none";
   }, 220);
 }
 
@@ -79,6 +139,54 @@ function showElement(el) {
   if (!el) return;
   el.classList.remove("destroyed-element", "glitch");
   el.removeAttribute("data-destroyed");
+
+  // Clear inline hiding styles.
+  el.style.opacity = "";
+  el.style.display = "";
+}
+
+// Removed/disabled stylesheet nodes, held so they can be restored on redo.
+let savedStyleNodes = [];
+
+function removeAllStyles() {
+  const styleNodes = [
+    ...document.querySelectorAll('link[rel="stylesheet"]'),
+    ...document.querySelectorAll("style"),
+  ];
+
+  if (styleNodes.length === 0) {
+    // Fallback guard: if nothing found, no-op.
+    return;
+  }
+
+  savedStyleNodes = styleNodes;
+
+  styleNodes.forEach((node) => {
+    if (node instanceof HTMLStyleElement) {
+      // Keep reference but strip contents so layout resets to raw HTML.
+      node.dataset.savedHtml = node.textContent;
+      node.textContent = "";
+    } else if (node instanceof HTMLLinkElement) {
+      node.disabled = true;
+    }
+  });
+}
+
+function restoreAllStyles() {
+  savedStyleNodes.forEach((node) => {
+    if (node instanceof HTMLStyleElement) {
+      if (node.dataset.savedHtml !== undefined) {
+        node.textContent = node.dataset.savedHtml;
+        delete node.dataset.savedHtml;
+      } else {
+        // Fallback: remove any inherited browser-ish state (no-op).
+      }
+    } else if (node instanceof HTMLLinkElement) {
+      node.disabled = false;
+    }
+  });
+
+  savedStyleNodes = [];
 }
 
 const destructionStages = [
@@ -346,7 +454,7 @@ const destructionStages = [
     name: "Navbar: Branding",
     destroy() { hideElement(brandLink); },
     restore() { showElement(brandLink); },
-    message: "UndoApp branding removed.",
+    message: "Texto branding removed.",
   },
   {
     name: "Header",
@@ -394,6 +502,12 @@ const destructionStages = [
   //  STAGE 8 — FINAL 404
   // ═══════════════════════════════════════════════
 
+  {
+    name: "Stylesheet",
+    destroy() { removeAllStyles(); },
+    restore() { restoreAllStyles(); },
+    message: "The stylesheet has been undone. Raw HTML remains.",
+  },
   {
     name: "Final State",
     destroy() {
@@ -445,7 +559,7 @@ const documents = initialSaved ? initialSaved.documents : [
   {
     id: 1,
     name: "Document1",
-    content: editor ? editor.innerHTML : "<h1>Welcome to UndoApp</h1><p>Start writing something here.</p>",
+    content: editor ? editor.innerHTML : "<h1>Welcome to texto</h1><p>Start writing something here.</p>",
   },
 ];
 
@@ -691,6 +805,8 @@ function destroyNextStage() {
 
   destructionStage++;
 
+  saveDestructionState();
+
   updateSystemStatus();
   updateHistoryUI();
 
@@ -709,6 +825,12 @@ function restorePreviousStage() {
 
   destructionStage = prevStageIdx;
 
+  if (destructionHistory.length === 0) {
+    clearDestructionState();
+  } else {
+    saveDestructionState();
+  }
+
   showToast("System Restored", `${stage.name} restored.`);
 
   updateSystemStatus();
@@ -724,6 +846,8 @@ function restoreAllWebsite() {
   }
 
   destructionStage = 0;
+
+  clearDestructionState();
 
   showToast("Website Restored", "All components restored.");
   updateSystemStatus();
@@ -798,7 +922,7 @@ function reconstructWithAnimations() {
 
 function updateSystemStatus() {
   const statusBadge = document.querySelector(".status-badge");
-  const statusText = statusBadge?.querySelector("span:last-child");
+  const statusText = statusBadge?.querySelector(".status-text");
 
   if (!statusBadge || !statusText) return;
 
@@ -1645,6 +1769,9 @@ renderDocuments();
 saveState();
 updateHistoryUI();
 updateToolbarState();
+
+// Re-apply persisted SYSTEM UNDO destruction state (survives reload).
+reapplyDestructionState();
 
 // ==========================================
 // DARK MODE
