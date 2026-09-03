@@ -1017,6 +1017,52 @@ body.dark-mode .redo-hint kbd {
   color: #e5e7eb;
 }
 
+/* Undo The Undo — auto-restore button on the 404 screen */
+.undo-the-undo-btn {
+  margin: 30px 0 8px;
+  padding: 14px 36px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  background: #312e81;
+  border: 2px solid #1e1b4b;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(49, 46, 129, 0.3);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.undo-the-undo-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 12px 35px rgba(49, 46, 129, 0.45);
+}
+
+.undo-the-undo-btn:active {
+  transform: scale(0.95);
+}
+
+.undo-the-undo-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.undo-the-undo-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+body.dark-mode .undo-the-undo-btn {
+  background: #4338ca;
+  border-color: #312e81;
+}
+
+body.dark-mode .undo-the-undo-hint {
+  color: #9ca3af;
+}
+
 /* Dark mode big redo button */
 body.dark-mode .big-redo-btn {
   background: #ef4444;

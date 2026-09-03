@@ -131,12 +131,14 @@ Normal Undo   System Undo (40 stages)
                  ↓
      Individual Element Destruction
      (fade-out, slide, 3D collapse, CSS removal)
-                 ↓
-        404 — Big Red Shaking REDO Button
-                 ↓
-        Grouped Redo (8 shuffled groups)
-                 ↓
-        Website Rebuilt (random order)
+                  ↓
+         404 — Big Red Shaking REDO Button
+                  ↓
+         One Component Per Redo Click (40 steps)
+                  ↓
+         Scrambled / Wrong-Position Rebuild
+                  ↓
+         "UNDO THE UNDO" auto-restore (~20s)
 ```
 
 ---
@@ -210,20 +212,23 @@ FINAL (1 stage):    404 page with big red shaking REDO button
 
 #### Redo / Website Rebuild
 
-After complete destruction, a **big red shaking REDO button** appears on the 404 page. Clicking it (or Ctrl+Y) restores the website in **8 randomized groups**:
+After complete destruction, a **big red shaking REDO button** appears on the 404 page. Clicking it (or Ctrl+Y) restores the website **one component per click** — a full rebuild takes exactly **40 clicks**, with live toast progress, milestone celebrations, glitch moments, and combo bonuses for fast clicking.
 
 ```text
-Group 1: App Frame (Header + Footer + Sidebar)
-Group 2: Header Internals (Brand + Title + Status + Buttons)
-Group 3: Sidebar Internals (Docs + Add Button + Storage)
-Group 4: Editor + Toolbar (Card + all formatting buttons)
-Group 5: Action Bar (Save + Delete + Emoji + Link + Download + More)
-Group 6: Content + CSS (Editor content + Stylesheet restored)
-Group 7: Undo Indicator (Indicator + Counter + Shortcuts + Buttons)
-Group 8: Footer Details (Version + Status + Privacy + Terms + GitHub)
+~28 THEMED PHASES, SHUFFLED EVERY SESSION:
+  Foundation → Identity → Controls → File Cabinet → Workspace →
+  Formatting → Actions → Content → Stylesheet → Undo System → Fine Print
 ```
 
-Groups are **shuffled randomly** each time, so the rebuild order is different every session.
+But there's a twist — as of the latest update redo **does not** put things back where they belong:
+
+* Restored components land in **random / wrong positions** (scattered across the header, sidebar, workspace and footer).
+* The only proper way to set the rebuilt site right is to **wipe `localStorage`**, which reloads the pristine DOM.
+* The status badge stays **Critical** while broken and only flips to **Ready** (with confetti) once everything is back.
+
+#### Undo The Undo (Auto-Restore)
+
+On the 404 screen there is now a **"⟲ UNDO THE UNDO"** button. Clicking it brings **everything back automatically** over **~20 seconds** (one component at a time, same as clicking REDO repeatedly). Manual REDO / Ctrl+Y cancels the auto-restore and returns control to the user.
 
 #### Animations
 
@@ -380,11 +385,15 @@ Features include:
 * [x] System status badge updates (Ready → Warning → Critical)
 * [x] Undo indicator warning/unstable states
 * [x] 404 page with big red shaking redo button
-* [x] Grouped redo system (8 groups, shuffled random order)
+* [x] One-component-per-click redo system (40 steps, shuffled themed phases)
 * [x] Restore animations (fade-in, slide-in, 3D perspective reverse)
 * [x] Green pulse on each redo step
 * [x] Dark mode support for all destruction/restore animations
 * [x] Full redo capability (Ctrl+Y or redo button)
+* [x] Redo restores parts in scrambled / wrong positions (fix requires clearing `localStorage`)
+* [x] "UNDO THE UNDO" button — automatic full rebuild over ~20s
+* [x] Edit shorthand — editor region shortened so it isn't covered by the undo/redo bar
+* [x] Save button moved next to the "··· more options" button in the action bar
 
 ### Current Focus
 
@@ -394,7 +403,7 @@ The core concept of the project is fully implemented:
 
 > **When user history reaches zero, Ctrl+Z stops undoing the document and starts undoing the website itself — one component at a time across 40 stages.**
 
-After complete destruction, a big red shaking REDO button appears. Clicking it restores the website in **randomized groups** — each rebuild order is different.
+After complete destruction, a big red shaking REDO button appears. Clicking it restores the website **one component per click** across **40 steps**, but parts come back in **scrambled, wrong positions** — so the only way to truly rebuild it correctly is the **"UNDO THE UNDO"** button, which reassembles everything automatically over ~20 seconds, or by clearing `localStorage`.
 
 ---
 

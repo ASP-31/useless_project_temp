@@ -74,6 +74,7 @@ const editorActions = document.getElementById("editor-actions");
 const undoShortcuts = document.getElementById("undo-shortcuts");
 const historyCounterEl = document.getElementById("history-counter");
 const bigRedoBtn = document.getElementById("big-redo-btn");
+const undoTheUndoBtn = document.getElementById("undo-the-undo-btn");
 
 // ==========================================
 // DOCUMENTS & LOCAL STORAGE
@@ -571,6 +572,8 @@ function updateRedoStatus() {
   if (remaining === 0) {
     label = "Ready";
     cls = "status-ready";
+    // Everything is back — stop the "beating" corrupted-text animation too.
+    if (editor) editor.classList.remove("text-corrupted");
   } else if (total > 0 && remaining <= Math.ceil(total * 0.15)) {
     // Under 15% left broken — almost there, downgrade to warning
     label = "Warning";
@@ -1226,6 +1229,9 @@ function performFinalRestore() {
     if (flavor) {
       showToast(`↻ ${REDO_FINAL_PHASE.emoji} ${REDO_FINAL_PHASE.name}`, flavor, 4000, "restore");
     }
+    // The website is whole again — make sure the "beating" corrupted-text
+    // animation is gone no matter whether the stylesheet onload callback fired.
+    if (editor) editor.classList.remove("text-corrupted");
     updateRedoStatus();
     updateUndoIndicatorState();
     updateHistoryUI();
@@ -1350,6 +1356,39 @@ function performSystemRedo() {
     updateToolbarState();
     checkRedoMilestones();
   }, delay);
+}
+
+// "UNDO THE UNDO" — after everything is undone, this button brings it all back
+// automatically over ~20 seconds, one component at a time (same as clicking
+// REDO repeatedly, but hands-free).
+let autoUndoTheUndoTimer = null;
+
+function cancelAutoUndoTheUndo() {
+  if (autoUndoTheUndoTimer) {
+    clearInterval(autoUndoTheUndoTimer);
+    autoUndoTheUndoTimer = null;
+  }
+  if (undoTheUndoBtn) undoTheUndoBtn.disabled = false;
+}
+
+function startAutoUndoTheUndo() {
+  cancelAutoUndoTheUndo();
+  if (systemRedoStack.length === 0) return;
+
+  revealBrokenSite();
+  if (undoTheUndoBtn) undoTheUndoBtn.disabled = true;
+
+  const total = systemRedoStack.length;
+  const interval = Math.max(250, Math.min(800, Math.round(20000 / total)));
+  showToast("⟲ UNDO THE UNDO", `Reassembling everything automatically in ~${Math.round((total * interval) / 1000)}s...`, 3000, "restore");
+
+  autoUndoTheUndoTimer = setInterval(() => {
+    if (systemRedoStack.length === 0) {
+      cancelAutoUndoTheUndo();
+      return;
+    }
+    performSystemRedo();
+  }, interval);
 }
 
 function checkRedoMilestones() {
@@ -2039,6 +2078,7 @@ if (undoBtn) {
 
 if (redoBtn) {
   redoBtn.addEventListener("click", () => {
+    cancelAutoUndoTheUndo();
     if (systemRedoStack.length > 0) {
       performSystemRedo();
     } else {
@@ -2050,9 +2090,17 @@ if (redoBtn) {
 // Big Red Redo Button on final state
 if (bigRedoBtn) {
   bigRedoBtn.addEventListener("click", () => {
+    cancelAutoUndoTheUndo();
     if (systemRedoStack.length > 0) {
       performSystemRedo();
     }
+  });
+}
+
+// Undo The Undo — bring everything back automatically over ~20s
+if (undoTheUndoBtn) {
+  undoTheUndoBtn.addEventListener("click", () => {
+    startAutoUndoTheUndo();
   });
 }
 
@@ -2079,6 +2127,7 @@ document.addEventListener("keydown", (event) => {
     event.code === "KeyY"
   ) {
     event.preventDefault();
+    cancelAutoUndoTheUndo();
     if (systemRedoStack.length > 0) {
       // System Redo — restore the website from the stack
       performSystemRedo();
