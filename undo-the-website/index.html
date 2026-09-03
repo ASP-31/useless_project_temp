@@ -19,7 +19,18 @@
       <!-- ================= HEADER ================= -->
       <header id="app-header" class="app-header">
         <div class="header-left">
-          <a href="#" class="brand">
+          <button
+            id="header-sidebar-toggle-btn"
+            class="icon-btn"
+            type="button"
+            aria-label="Toggle sidebar"
+            title="Toggle sidebar"
+            style="display: none;"
+          >
+            ☰
+          </button>
+
+          <a href="#" id="brand-link" class="brand">
             <span class="brand-icon">↶</span>
             <span class="brand-name">UndoApp</span>
           </a>
@@ -41,7 +52,7 @@
 
           <span class="save-status">
             <span class="save-dot"></span>
-            Saved to Cloud
+            <span id="save-status-text">Saved to Cloud</span>
           </span>
         </div>
 
@@ -50,7 +61,7 @@
             Share
           </button> -->
 
-          <button class="btn btn-secondary" type="button">
+          <button id="export-btn" class="btn btn-secondary" type="button">
             Export
           </button>
 
@@ -71,6 +82,7 @@
             <span>Documents</span>
 
             <button
+              id="sidebar-toggle-btn"
               class="icon-btn"
               type="button"
               aria-label="Collapse sidebar"
@@ -124,15 +136,26 @@
 
                 <div class="toolbar-group">
 
-                  <button
-                    class="toolbar-btn"
-                    type="button"
-                    title="Text style"
-                  >
-                    T
-                  </button>
+                  <div class="toolbar-dropdown">
+  <button
+    id="text-style-btn"
+    class="toolbar-btn"
+    type="button"
+    title="Text style"
+  >
+    T
+  </button>
 
+  <div id="text-style-menu" class="toolbar-menu">
+    <button type="button" data-style="p">Normal</button>
+    <button type="button" data-style="h1">Heading 1</button>
+    <button type="button" data-style="h2">Heading 2</button>
+    <button type="button" data-style="h3">Heading 3</button>
+    <button type="button" data-style="pre">Code</button>
+  </div>
+</div>
                   <button
+                    id="bold-btn"
                     class="toolbar-btn"
                     type="button"
                     title="Bold"
@@ -141,19 +164,12 @@
                   </button>
 
                   <button
+                    id="underline-btn"
                     class="toolbar-btn"
                     type="button"
                     title="Underline"
                   >
                     <u>U</u>
-                  </button>
-
-                  <button
-                    class="toolbar-btn"
-                    type="button"
-                    title="Italic"
-                  >
-                    <i>I</i>
                   </button>
 
                 </div>
@@ -163,6 +179,7 @@
                 <div class="toolbar-group">
 
                   <button
+                    id="align-left-btn"
                     class="toolbar-btn"
                     type="button"
                     title="Align left"
@@ -171,6 +188,7 @@
                   </button>
 
                   <button
+                    id="align-center-btn"
                     class="toolbar-btn"
                     type="button"
                     title="Align center"
@@ -179,6 +197,7 @@
                   </button>
 
                   <button
+                    id="align-right-btn"
                     class="toolbar-btn"
                     type="button"
                     title="Align right"
@@ -192,23 +211,41 @@
 
                 <div class="toolbar-group">
 
-                  <button
-                    class="toolbar-btn color-btn"
-                    type="button"
-                    title="Accent color"
-                  >
-                    <span class="color-dot"></span>
-                  </button>
+                  <div class="toolbar-dropdown">
+  <button
+    id="color-btn"
+    class="toolbar-btn color-btn"
+    type="button"
+    title="Text color"
+  >
+    <span class="color-dot"></span>
+  </button>
+
+  <div id="color-menu" class="toolbar-menu color-menu">
+    <button type="button" data-color="#1E293B">
+      <span class="color-option" style="background:#1E293B"></span>
+    </button>
+
+    <button type="button" data-color="#6366F1">
+      <span class="color-option" style="background:#6366F1"></span>
+    </button>
+
+    <button type="button" data-color="#EF4444">
+      <span class="color-option" style="background:#EF4444"></span>
+    </button>
+
+    <button type="button" data-color="#10B981">
+      <span class="color-option" style="background:#10B981"></span>
+    </button>
+
+    <button type="button" data-color="#F59E0B">
+      <span class="color-option" style="background:#F59E0B"></span>
+    </button>
+  </div>
+</div>
 
                   <button
-                    class="toolbar-btn"
-                    type="button"
-                    title="Blockquote"
-                  >
-                    “
-                  </button>
-
-                  <button
+                    id="clear-formatting-btn"
                     class="toolbar-btn"
                     type="button"
                     title="Clear formatting"
@@ -254,6 +291,7 @@
                 <div class="action-left">
 
                   <button
+                    id="delete-doc-btn"
                     class="action-btn danger"
                     type="button"
                     title="Delete document"
@@ -263,15 +301,32 @@
 
                   <div class="action-divider"></div>
 
-                  <button
-                    class="action-btn"
-                    type="button"
-                    title="Add emoji"
-                  >
-                    ☺
-                  </button>
+                  <div class="action-dropdown">
+                    <button
+                      id="emoji-btn"
+                      class="action-btn"
+                      type="button"
+                      title="Add emoji"
+                    >
+                      ☺
+                    </button>
+
+                    <div id="emoji-menu" class="action-menu emoji-menu">
+                      <button type="button">😀</button>
+                      <button type="button">😊</button>
+                      <button type="button">😂</button>
+                      <button type="button">❤️</button>
+                      <button type="button">👍</button>
+                      <button type="button">🎉</button>
+                      <button type="button">🔥</button>
+                      <button type="button">✨</button>
+                      <button type="button">📝</button>
+                      <button type="button">💡</button>
+                    </div>
+                  </div>
 
                   <button
+                    id="link-btn"
                     class="action-btn"
                     type="button"
                     title="Attach link"
@@ -280,6 +335,7 @@
                   </button>
 
                   <button
+                    id="download-btn"
                     class="action-btn"
                     type="button"
                     title="Download"
@@ -287,13 +343,22 @@
                     ↓
                   </button>
 
-                  <button
-                    class="action-btn"
-                    type="button"
-                    title="More options"
-                  >
-                    ···
-                  </button>
+                  <div class="action-dropdown">
+                    <button
+                      id="more-options-btn"
+                      class="action-btn"
+                      type="button"
+                      title="More options"
+                    >
+                      ···
+                    </button>
+
+                    <div id="more-options-menu" class="action-menu">
+                      <button type="button" id="opt-word-count">📊 Word Count</button>
+                      <button type="button" id="opt-select-all">📋 Select All</button>
+                      <button type="button" id="opt-clear-all">🧹 Clear Content</button>
+                    </div>
+                  </div>
 
                 </div>
 
