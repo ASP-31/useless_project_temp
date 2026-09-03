@@ -2,12 +2,430 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>undo-the-website</title>
+
+    <meta
+      name="description"
+      content="UndoApp — A text editor that doesn't know when to stop undoing."
+    />
+
+    <title>UndoApp — Undo the Website</title>
+    <link rel="stylesheet" href="src/style.css">
   </head>
+
   <body>
-    <div id="app"></div>
+    <div id="app">
+
+      <!-- ================= HEADER ================= -->
+      <header id="app-header" class="app-header">
+        <div class="header-left">
+          <a href="#" class="brand">
+            <span class="brand-icon">↶</span>
+            <span class="brand-name">UndoApp</span>
+          </a>
+
+          <span id="system-status" class="status-badge status-ready">
+            <span class="status-dot"></span>
+            Ready
+          </span>
+        </div>
+
+        <div class="document-info">
+          <input
+            id="document-title"
+            class="document-title"
+            type="text"
+            value="Untitled Document.txt"
+            aria-label="Document title"
+          />
+
+          <span class="save-status">
+            <span class="save-dot"></span>
+            Saved to Cloud
+          </span>
+        </div>
+
+        <div class="header-actions">
+          <!-- <button class="btn btn-outline" type="button">
+            Share
+          </button> -->
+
+          <button class="btn btn-secondary" type="button">
+            Export
+          </button>
+
+          <!-- <button class="btn btn-primary" type="button">
+            Publish
+          </button> -->
+        </div>
+      </header>
+
+
+      <!-- ================= MAIN ================= -->
+      <main id="main-content" class="main-layout">
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside id="sidebar" class="sidebar">
+
+          <div class="sidebar-header">
+            <span>Documents</span>
+
+            <button
+              class="icon-btn"
+              type="button"
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
+            >
+              ‹
+            </button>
+          </div>
+
+          <nav class="sidebar-nav">
+
+            <a href="#" class="sidebar-item active">
+              <span class="sidebar-icon">▤</span>
+              <span>Untitled Document</span>
+            </a>
+
+          </nav>
+
+          <button
+            id="add-document-btn"
+            class="add-document-btn"
+            type="button"
+          >
+            <span>＋</span>
+            <span>Add Document</span>
+          </button>
+
+          <div class="sidebar-bottom">
+            <div class="storage-label">
+              <span>Storage</span>
+              <span>24%</span>
+            </div>
+
+            <div class="storage-bar">
+              <div class="storage-progress"></div>
+            </div>
+          </div>
+
+        </aside>
+
+
+        <!-- ================= EDITOR AREA ================= -->
+        <section class="workspace">
+
+          <div class="editor-container">
+
+            <div id="editor-card" class="editor-card">
+
+              <!-- TOP TOOLBAR -->
+              <div id="editor-toolbar" class="editor-toolbar">
+
+                <div class="toolbar-group">
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Text style"
+                  >
+                    T
+                  </button>
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Bold"
+                  >
+                    <strong>B</strong>
+                  </button>
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Underline"
+                  >
+                    <u>U</u>
+                  </button>
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Italic"
+                  >
+                    <i>I</i>
+                  </button>
+
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Align left"
+                  >
+                    ≡
+                  </button>
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Align center"
+                  >
+                    ≣
+                  </button>
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Align right"
+                  >
+                    ≡
+                  </button>
+
+                </div>
+
+                <div class="toolbar-divider"></div>
+
+                <div class="toolbar-group">
+
+                  <button
+                    class="toolbar-btn color-btn"
+                    type="button"
+                    title="Accent color"
+                  >
+                    <span class="color-dot"></span>
+                  </button>
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Blockquote"
+                  >
+                    “
+                  </button>
+
+                  <button
+                    class="toolbar-btn"
+                    type="button"
+                    title="Clear formatting"
+                  >
+                    Tx
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <!-- EDITOR CONTENT -->
+              <div class="editor-content">
+
+                <div
+                  id="text-editor"
+                  class="text-editor"
+                  contenteditable="true"
+                  role="textbox"
+                  aria-multiline="true"
+                  data-placeholder="Type here..."
+                  spellcheck="true"
+                >
+                  <h1>Welcome to UndoApp</h1>
+
+                  <p>
+                    Start writing something here. Everything you do can be
+                    undone.
+                  </p>
+
+                  <p>
+                    Go ahead. Try it.
+                  </p>
+                </div>
+
+              </div>
+
+
+              <!-- BOTTOM ACTION BAR -->
+              <div id="editor-actions" class="editor-actions">
+
+                <div class="action-left">
+
+                  <button
+                    class="action-btn danger"
+                    type="button"
+                    title="Delete document"
+                  >
+                    🗑
+                  </button>
+
+                  <div class="action-divider"></div>
+
+                  <button
+                    class="action-btn"
+                    type="button"
+                    title="Add emoji"
+                  >
+                    ☺
+                  </button>
+
+                  <button
+                    class="action-btn"
+                    type="button"
+                    title="Attach link"
+                  >
+                    🔗
+                  </button>
+
+                  <button
+                    class="action-btn"
+                    type="button"
+                    title="Download"
+                  >
+                    ↓
+                  </button>
+
+                  <button
+                    class="action-btn"
+                    type="button"
+                    title="More options"
+                  >
+                    ···
+                  </button>
+
+                </div>
+
+                <button
+                  id="save-btn"
+                  class="btn btn-primary save-btn"
+                  type="button"
+                >
+                  Save
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+
+
+      <!-- ================= FOOTER ================= -->
+      <footer id="app-footer" class="app-footer">
+
+        <div class="footer-left">
+          <span>UndoApp v1.0</span>
+
+          <span class="footer-divider">•</span>
+
+          <span>All changes saved</span>
+        </div>
+
+        <div class="footer-center">
+          <span class="footer-status">
+            <span class="status-dot"></span>
+            System operational
+          </span>
+        </div>
+
+        <div class="footer-right">
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">GitHub</a>
+        </div>
+
+      </footer>
+
+
+      <!-- ================= UNDO / REDO INDICATOR ================= -->
+      <!-- Kept outside all major UI components so it survives
+           the early destruction stages. It will be destroyed at Stage 7. -->
+
+      <div id="undo-indicator" class="undo-indicator">
+
+        <div class="undo-controls">
+
+          <button
+            id="undo-btn"
+            class="undo-action-btn"
+            type="button"
+            title="Undo — Ctrl+Z"
+            aria-label="Undo"
+          >
+            ↶
+          </button>
+
+          <button
+            id="redo-btn"
+            class="undo-action-btn"
+            type="button"
+            title="Redo — Ctrl+Y"
+            aria-label="Redo"
+          >
+            ↷
+          </button>
+
+        </div>
+
+        <div class="undo-shortcuts">
+          <span>Undo</span>
+          <kbd>Ctrl</kbd>
+          <span>+</span>
+          <kbd>Z</kbd>
+
+          <span class="shortcut-divider">|</span>
+
+          <span>Redo</span>
+          <kbd>Ctrl</kbd>
+          <span>+</span>
+          <kbd>Y</kbd>
+        </div>
+
+        <div class="history-counter">
+          <span>User History</span>
+          <strong id="history-count">0</strong>
+        </div>
+
+      </div>
+
+
+      <!-- ================= SYSTEM TOAST ================= -->
+      <div
+        id="system-toast"
+        class="system-toast"
+        role="status"
+        aria-live="polite"
+      >
+        <span class="toast-icon">!</span>
+
+        <div class="toast-content">
+          <strong id="toast-title">System Message</strong>
+          <span id="toast-message"></span>
+        </div>
+      </div>
+
+
+      <!-- ================= FINAL STATE ================= -->
+      <div id="final-state" class="final-state">
+
+        <h1>404: Website Undone.</h1>
+
+        <p>There is nothing left to undo.</p>
+
+        <a href="#" id="redo-website">
+          [ Press Ctrl+Y to Redo the Website ]
+        </a>
+
+      </div>
+
+    </div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
