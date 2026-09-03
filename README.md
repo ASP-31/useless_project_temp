@@ -70,7 +70,7 @@ Undoing sidebar...
 
         ↓
 
-Undoing CSS...
+Undoing bottom action bar...
 
         ↓
 
@@ -78,15 +78,19 @@ Undoing toolbar...
 
         ↓
 
-Undoing header...
-
-        ↓
-
 Undoing editor...
 
         ↓
 
+Undoing header...
+
+        ↓
+
 UNDO BUTTON UNSTABLE
+
+        ↓
+
+Undoing CSS...
 
         ↓
 
@@ -257,7 +261,7 @@ Features include:
 * Dark footer
 * Dark Undo/Redo indicator
 * Theme-aware buttons and controls
-* White UndoApp branding in dark mode
+* White `texto` branding in dark mode
 * Smooth theme transition
 
 ---
@@ -275,7 +279,7 @@ Features include:
 ### Phase 2 — Editor UI
 
 * [x] Header / navigation
-* [x] UndoApp branding
+* [x] `texto` branding
 * [x] System status indicator
 * [x] Document title
 * [x] Export button
@@ -339,17 +343,114 @@ Features include:
 
 **System Undo / Website Destruction**
 
-The normal editor functionality and Undo/Redo foundation are now in place.
+The normal editor functionality and Undo/Redo foundation are now in place, and the core concept of the project has been implemented:
 
-The next major development stage is the core concept of the project:
+> **When user history reaches zero, Ctrl+Z stops undoing the document and starts undoing the website itself.**
 
-> **When user history reaches zero, Ctrl+Z should stop undoing the document and start undoing the website itself.**
+Once System Undo is activated, each press of Ctrl+Z removes a single component of the interface until the website is fully undone. The complete, ordered sequence is documented in the [System Undo — The Destruction Sequence](#system-undo--the-destruction-sequence) section below.
 
-The destruction sequence will progressively remove or disable parts of the interface before reaching the final:
+The destruction state is also now **persistent** — it survives a page reload (see [Persistence](#persistence)).
+
+---
+
+## System Undo — The Destruction Sequence
+
+This is the core idea of the project and is now fully implemented.
+
+It starts as a normal rich text editor. The gimmick: once the normal editor undo history reaches zero, **Ctrl+Z starts undoing the website itself**.
 
 ```text
-404: Website Undone.
+NORMAL UNDO
+    ↓
+History reaches 0
+    ↓
+SYSTEM UNDO ACTIVATED
+    ↓
+Website components are destroyed, one Ctrl+Z at a time
+    ↓
+UNDO BUTTON UNSTABLE
+    ↓
+404 — THIS WEBSITE HAS BEEN UNDONE
 ```
+
+From this point on, each press of **Ctrl+Z** (or click of the Undo button) removes a single component of the interface. **Ctrl+Y / Ctrl+Shift+Z** (or the Redo button) restores the most recently destroyed component, and the "Undo the Undo" reconstruction flow rebuilds the entire website.
+
+### Destruction Order
+
+The destruction happens in a deterministic, granular sequence — one element or component per undo.
+
+1. **Footer is destroyed**
+
+   * Privacy
+   * Terms
+   * GitHub link
+   * Status
+   * Footer container
+
+2. **Sidebar components are destroyed**
+
+   * Storage indicator
+   * Add Document
+   * Document list
+   * Sidebar header
+   * Sidebar container
+
+3. **Bottom action bar is destroyed**
+
+   * More Options
+   * Download
+   * Link
+   * Emoji
+   * Delete
+   * Save
+
+4. **Editor toolbar components are destroyed**
+
+   * Color
+   * Alignment
+   * Clear formatting
+   * Underline
+   * Bold
+   * Text style
+
+5. **Editor is destroyed**
+
+   * Text content
+   * Editor container
+   * Editor card
+
+6. **Navbar / header is destroyed component-by-component**
+
+   * Export
+   * Theme toggle
+   * Save status
+   * Document title
+   * System status
+   * Branding
+   * Header
+
+7. **Remaining undo controls are destroyed**
+
+   * History counter
+   * Redo button
+   * Undo button — **"UNDO BUTTON UNSTABLE"**
+
+8. **The stylesheet is removed**
+
+   With the undo button gone, the final remaining tool of resistance — the CSS — is undone. The page drops to raw, unstyled HTML.
+
+9. **Final 404 / "WEBSITE UNDONE" state**
+
+The last stage collapses the page into the final **404 — THIS WEBSITE HAS BEEN UNDONE** state. From there, the website can only be reconstructed through the application's "Undo the Undo" mechanism, which rebuilds every component over a dramatic 12-second loading sequence.
+
+### Persistence
+
+The destruction state has been made **persistent using `localStorage`**. This is a major completed feature because reloading the page no longer restores the website:
+
+* Reloading after destroying the footer keeps the footer destroyed.
+* Reloading after destroying the sidebar keeps the sidebar destroyed.
+* Reaching the final 404 state, then reloading, keeps the website in that undone state.
+* The website can only be brought back via the application's undo/redo reconstruction mechanism.
 
 ---
 
@@ -364,7 +465,7 @@ git clone https://github.com/ASP-31/useless_project_temp.git
 Navigate into the project:
 
 ```bash
-cd useless_project_temp
+cd useless_project_temp/undo-the-website
 ```
 
 Install dependencies:
@@ -391,9 +492,21 @@ http://localhost:5173
 
 ---
 
+## Build
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+---
+
 ## Project Documentation
 
 ### Screenshots
+
+> Screenshots are not added to the repository yet. The sections below are reserved placeholders for the final submission.
 
 #### 1. Editor
 
@@ -424,6 +537,8 @@ http://localhost:5173
 ## Workflow
 
 ![Workflow](screenshots/workflow.png)
+
+*Workflow diagram pending — add `screenshots/workflow.png` before final submission.*
 
 *The application transitions from normal user history to system-level destruction once the undo history is exhausted.*
 
