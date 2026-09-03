@@ -21,9 +21,11 @@ Built for the **TinkerHub Useless Projects** hackathon.
 
 ### Project Description
 
-A simple web-based editor with a normal Undo/Redo system.
+A web-based rich text editor with a normal Undo/Redo system.
 
 But once there is nothing left to undo, pressing **Ctrl+Z** activates **System Undo** — progressively removing the website itself until nothing remains.
+
+---
 
 ## The Problem (that doesn't exist)
 
@@ -43,11 +45,13 @@ The entire website?
 
 We decided this absolutely needed to be solved.
 
+---
+
 ## The Solution (that nobody asked for)
 
 **Undo the Website** takes Ctrl+Z way too seriously.
 
-After all user actions have been undone, the website begins undoing **itself**:
+After all user actions have been undone, the website begins undoing **itself**.
 
 ```text
 USER HISTORY EXHAUSTED
@@ -95,7 +99,7 @@ Please stop pressing Ctrl+Z.
 
 ## Technical Details
 
-### Technologies/Components Used
+### Technologies / Components Used
 
 **Languages**
 
@@ -110,7 +114,6 @@ Please stop pressing Ctrl+Z.
 **Libraries**
 
 * Vanilla JavaScript
-* GSAP *(if required for animations)*
 
 **Tools**
 
@@ -121,43 +124,141 @@ Please stop pressing Ctrl+Z.
 
 ### Architecture
 
-The project intentionally uses a simple architecture:
+The project uses a lightweight client-side architecture:
 
 ```text
 User Interaction
-
        ↓
-
    Editor State
-
        ↓
-
-  History Stack
-
+ History Stack
        ↓
-
-   Undo / Redo
-
+  Undo / Redo
        ↓
-
 History Exhausted?
-
-   ↙          ↘
-
- No           Yes
-
- ↓             ↓
-
+   ↙           ↘
+ No             Yes
+ ↓               ↓
 Normal Undo   System Undo
-
                  ↓
-
           Website Destruction
-
                  ↓
-
                 404
 ```
+
+---
+
+## Implemented Features
+
+### Rich Text Editor
+
+The editor currently supports:
+
+* Editable document area
+* Headings
+* Normal text
+* Code formatting
+* Bold
+* Underline
+* Text alignment
+* Text color
+* Clear formatting
+* Emoji insertion
+* Link insertion
+* Word count
+* Select all
+* Clear content
+
+### Document Management
+
+* Create multiple documents
+* Switch between documents
+* Rename documents
+* Delete documents
+* Automatically persist documents using `localStorage`
+* Restore documents after page refresh
+
+### Undo / Redo System
+
+A custom history system has been implemented for the editor.
+
+Features include:
+
+* Undo button
+* Redo button
+* `Ctrl + Z`
+* `Ctrl + Y`
+* `Ctrl + Shift + Z`
+* User history counter
+* Caret position restoration
+* History snapshots based on editor state
+* Redo history reset after new changes
+* History handling for formatting operations
+
+The system also captures typing intelligently instead of creating a history entry for every individual character.
+
+### Editor Actions
+
+* Save document state
+* Download document as `.txt`
+* Export document through the browser print/PDF workflow
+* Delete/reset documents
+* Add emojis
+* Insert links
+* Word counting
+* Clear editor content
+
+### Sidebar
+
+* Document list
+* Active document indicator
+* Add Document
+* Sidebar collapse
+* Sidebar restore
+* Responsive sidebar behavior
+
+### Dropdown Menus
+
+Implemented interactive menus for:
+
+* Text styles
+* Text colors
+* Emoji selection
+* More options
+
+Menus automatically close when clicking outside them.
+
+### UI Feedback
+
+The application includes:
+
+* Save status
+* System status indicator
+* Toast notifications
+* Undo/Redo state indicators
+* Disabled Undo/Redo buttons when unavailable
+* Button active states
+* Hover interactions
+* Screen shake/glitch animation foundations
+
+### Dark Mode
+
+A dark mode theme has now been implemented.
+
+Features include:
+
+* Light/Dark theme toggle
+* Theme preference saved in `localStorage`
+* Theme restored automatically after refresh
+* Dark header
+* Dark sidebar
+* Dark editor
+* Dark toolbar and menus
+* Dark footer
+* Dark Undo/Redo indicator
+* Theme-aware buttons and controls
+* White UndoApp branding in dark mode
+* Smooth theme transition
 
 ---
 
@@ -190,11 +291,65 @@ Normal Undo   System Undo
 * [x] System toast container
 * [x] Final 404 state
 
+### Phase 3 — Editor Functionality
+
+* [x] Rich text formatting
+* [x] Text styles
+* [x] Text colors
+* [x] Text alignment
+* [x] Emoji insertion
+* [x] Link insertion
+* [x] Document creation
+* [x] Document switching
+* [x] Document renaming
+* [x] Document deletion
+* [x] LocalStorage persistence
+* [x] Save functionality
+* [x] TXT download
+* [x] PDF export workflow
+* [x] Word count
+* [x] Clear content
+* [x] Select all
+
+### Phase 4 — Undo / Redo
+
+* [x] Custom history stack
+* [x] Undo
+* [x] Redo
+* [x] Keyboard shortcuts
+* [x] Caret restoration
+* [x] History counter
+* [x] Typing history optimization
+* [x] Formatting history
+* [x] Redo history management
+
+### Phase 5 — UI / UX
+
+* [x] Responsive layout
+* [x] Sidebar collapse/restore
+* [x] Dropdown interactions
+* [x] Toast notifications
+* [x] Active toolbar states
+* [x] Hover states
+* [x] Dark mode
+* [x] Persistent theme preference
+* [x] Theme-aware UI components
+
 ### Current Focus
 
-**Normal Undo/Redo implementation**
+**System Undo / Website Destruction**
 
-The UI foundation is currently in place. The next step is to implement and test the normal editor history before adding the System Undo destruction sequence.
+The normal editor functionality and Undo/Redo foundation are now in place.
+
+The next major development stage is the core concept of the project:
+
+> **When user history reaches zero, Ctrl+Z should stop undoing the document and start undoing the website itself.**
+
+The destruction sequence will progressively remove or disable parts of the interface before reaching the final:
+
+```text
+404: Website Undone.
+```
 
 ---
 
@@ -246,13 +401,19 @@ http://localhost:5173
 
 *The normal editor before the website realizes what is about to happen.*
 
-#### 2. System Undo
+#### 2. Dark Mode
+
+![Dark Mode](screenshots/dark-mode.png)
+
+*The same editor after embracing the darkness.*
+
+#### 3. System Undo
 
 ![System Undo](screenshots/system-undo.png)
 
 *The moment Ctrl+Z stops undoing user actions and starts undoing the application.*
 
-#### 3. Final State
+#### 4. Final State
 
 ![Website Undone](screenshots/website-undone.png)
 
@@ -274,7 +435,7 @@ http://localhost:5173
 
 [Add demo video link here]
 
-*The demo shows normal editing, regular Undo/Redo, followed by the System Undo sequence that progressively destroys the website.*
+*The demo shows document editing, formatting, multiple documents, normal Undo/Redo, Dark Mode, and eventually the System Undo sequence.*
 
 ### Additional Demos
 
@@ -287,14 +448,20 @@ http://localhost:5173
 
 ### Arjun S Pai
 
+* Project development
+* UI / UX development
 * [Add specific contributions]
 
 ### Ahmed Nasim
 
 * Project setup and development
 * Undo/Redo history system
+* Editor functionality
+* Document management
+* LocalStorage persistence
 * System Undo logic
 * UI and destruction sequence
+* Dark Mode implementation
 * Testing and deployment
 
 ---
