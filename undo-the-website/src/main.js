@@ -50,6 +50,21 @@ const toastMessage = document.getElementById("toast-message");
 const themeToggleBtn = document.getElementById("theme-toggle-btn");
 
 // ==========================================
+// DESTRUCTION SYSTEM
+// ==========================================
+
+const app = document.getElementById("app");
+const footer = document.querySelector(".app-footer");
+
+const footerRight = document.querySelector(".footer-right");
+const footerCenter = document.querySelector(".footer-center");
+const footerLeft = document.querySelector(".footer-left");
+
+let destructionStage = 0;
+let destructionHistory = [];
+
+
+// ==========================================
 // DOCUMENTS & LOCAL STORAGE
 // ==========================================
 
@@ -205,36 +220,57 @@ function flushPendingState() {
 function undo() {
   flushPendingState();
 
-  if (history.length <= 1) {
+  // Normal editor undo
+  if (history.length > 1) {
+    const currentState = history.pop();
+
+    redoHistory.push(currentState);
+
+    const previousState = history[history.length - 1];
+
+    editor.innerHTML = previousState.html;
+    editor.focus();
+
+    setCaretOffset(
+      editor,
+      previousState.caret
+    );
+
+    updateActiveDocumentContent();
+    updateHistoryUI();
+    updateToolbarState();
+
     return;
   }
 
-  const currentState = history.pop();
-  redoHistory.push(currentState);
-
-  const previousState = history[history.length - 1];
-  editor.innerHTML = previousState.html;
-
-  editor.focus();
-  setCaretOffset(editor, previousState.caret);
-
-  updateActiveDocumentContent();
-  updateHistoryUI();
-  updateToolbarState();
+  // No editor history left.
+  // Start destroying the website.
+  destroyNextStage();
 }
 
 function redo() {
+  // Restore destroyed website first
+  if (destructionHistory.length > 0) {
+    restorePreviousStage();
+    return;
+  }
+
+  // Normal editor redo
   if (redoHistory.length === 0) {
     return;
   }
 
   const nextState = redoHistory.pop();
+
   history.push(nextState);
 
   editor.innerHTML = nextState.html;
-
   editor.focus();
-  setCaretOffset(editor, nextState.caret);
+
+  setCaretOffset(
+    editor,
+    nextState.caret
+  );
 
   updateActiveDocumentContent();
   updateHistoryUI();
@@ -265,6 +301,153 @@ function showToast(title, message, duration = 3000) {
   toastTimeout = setTimeout(() => {
     systemToast.classList.remove("visible");
   }, duration);
+}
+
+
+// ==========================================
+// WEBSITE DESTRUCTION ENGINE
+// ==========================================
+
+const destructionStages = [
+  {
+    name: "Footer Links",
+    target: () => footerRight,
+    message: "Some things are starting to disappear..."
+  },
+  {
+    name: "Footer Status",
+    target: () => footerCenter,
+    message: "System status is becoming unreliable."
+  },
+  {
+    name: "Footer Information",
+    target: () => footerLeft,
+    message: "Basic information is being lost."
+  },
+  {
+    name: "Footer",
+    target: () => footer,
+    message: "The footer has been undone."
+  }
+];
+
+function destroyElement(element) {
+  if (!element) return;
+
+  element.classList.add("glitch");
+
+  setTimeout(() => {
+    element.dataset.destroyed = "true";
+    element.style.transition =
+      "opacity 250ms ease, transform 250ms ease, max-height 250ms ease";
+
+    element.style.opacity = "0";
+    element.style.transform = "translateX(8px)";
+    element.style.maxHeight = "0";
+    element.style.overflow = "hidden";
+
+    setTimeout(() => {
+      element.style.display = "none";
+      element.classList.remove("glitch");
+    }, 260);
+  }, 120);
+}
+
+function restoreElement(element) {
+  if (!element) return;
+
+  element.style.display = "";
+  element.style.maxHeight = "";
+  element.style.overflow = "";
+  
+  requestAnimationFrame(() => {
+    element.style.opacity = "1";
+    element.style.transform = "translateX(0)";
+  });
+}
+
+function destroyNextStage() {
+  if (destructionStage >= destructionStages.length) {
+    return false;
+  }
+
+  const stage = destructionStages[destructionStage];
+  const element = stage.target();
+
+  if (!element) {
+    destructionStage++;
+    return destroyNextStage();
+  }
+
+  destructionHistory.push({
+    stage: destructionStage,
+    element
+  });
+
+  showToast(
+    "System Undo",
+    stage.message
+  );
+
+  destroyElement(element);
+
+  destructionStage++;
+
+  updateSystemStatus();
+
+  return true;
+}
+
+function restorePreviousStage() {
+  if (destructionHistory.length === 0) {
+    return false;
+  }
+
+  const previous = destructionHistory.pop();
+
+  restoreElement(previous.element);
+
+  destructionStage = previous.stage;
+
+  showToast(
+    "System Restored",
+    `${destructionStages[previous.stage].name} restored.`
+  );
+
+  updateSystemStatus();
+
+  return true;
+}
+
+// ==========================================
+// DESTRUCTION STATUS
+// ==========================================
+
+function updateSystemStatus() {
+  const statusBadge = document.querySelector(".status-badge");
+  const statusText = statusBadge?.querySelector("span:last-child");
+
+  if (!statusBadge || !statusText) return;
+
+  statusBadge.classList.remove(
+    "status-ready",
+    "status-warning"
+  );
+
+  if (destructionStage === 0) {
+    statusBadge.classList.add("status-ready");
+    statusText.textContent = "Ready";
+    return;
+  }
+
+  if (destructionStage <= 2) {
+    statusBadge.classList.add("status-warning");
+    statusText.textContent = "Warning";
+    return;
+  }
+
+  statusBadge.classList.add("status-warning");
+  statusText.textContent = "Unstable";
 }
 
 // ==========================================
@@ -880,13 +1063,13 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
-  // Ctrl + Z / Cmd + Z (Undo)
+  // CTRL + Z
   if (event.code === "KeyZ" && !event.shiftKey) {
     event.preventDefault();
     undo();
   }
 
-  // Ctrl + Shift + Z / Ctrl + Y (Redo)
+  // CTRL + SHIFT + Z / CTRL + Y
   if (
     (event.code === "KeyZ" && event.shiftKey) ||
     event.code === "KeyY"
