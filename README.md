@@ -408,6 +408,7 @@ Features include:
 * [x] Auto-rebuild components fly in one-by-one from off-screen into scrambled positions
 * [x] "UNDO THE UNDO" is the last thing on screen — no 404 screen / red-green gradient at the end
 * [x] "UNDO THE UNDO" stays visible during undo and goes away after redo is complete
+* [x] Scrambled version achieved through redo is persisted across refresh — reload shows the scrambled layout, not the pristine default
 * [x] Edit shorthand — editor region shortened so it isn't covered by the undo/redo bar
 * [x] Save button moved next to the "··· more options" button in the action bar
 
