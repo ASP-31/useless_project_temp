@@ -396,7 +396,8 @@ Features include:
 * [x] Individual element removal with fade-out animations
 * [x] CSS stylesheet actually removed (raw unstyled HTML)
 * [x] Screen shake on every undo step
-* [x] Dramatic toast notifications for each stage
+* [x] Dramatic toast notifications for each stage
+
 * [x] System status badge updates (Ready → Warning → Critical)
 * [x] Undo indicator warning/unstable states
 * [x] "WEBSITE UNDONE" end state — app hidden, status CRITICAL, only the UNDO THE UNDO button remains (no 404 screen / red redo button)
@@ -470,37 +471,40 @@ http://localhost:5173
 
 ### Screenshots
 
-> Screenshots are not added yet — they'll be dropped in before submission.
 
 #### 1. Editor
 
-*Screenshot pending (screenshots/editor.png)*
+![Editor](undo-the-website/screenshots/editor.png)
 
 *The normal editor before the website realizes what is about to happen.*
 
 #### 2. Dark Mode
 
-*Screenshot pending (screenshots/dark-mode.png)*
+![Dark Mode](undo-the-website/screenshots/darkmode.png)
 
 *The same editor after embracing the darkness.*
 
 #### 3. System Undo
 
-*Screenshot pending (screenshots/system-undo.png)*
+![System Undo](undo-the-website/screenshots/system-undo.png)
 
 *The moment Ctrl+Z stops undoing user actions and starts undoing the application.*
 
 #### 4. Final State
 
-*Screenshot pending (screenshots/website-undone.png)*
+![Website Undone](undo-the-website/screenshots/website-undone.png)
 
 *The inevitable result: the website has successfully undone itself.*
 
 ---
 
+### Scrambled Reconstruction
+
+![Scrambled Reconstruction](undo-the-website/screenshots/scrambled.png)
+
 ## Workflow
 
-*Screenshot pending (screenshots/workflow.png)*
+![Workflow](undo-the-website/screenshots/workflow.png)
 
 *The application transitions from normal user history to system-level destruction once the undo history is exhausted.*
 
@@ -510,13 +514,13 @@ http://localhost:5173
 
 ### Video
 
-[Add demo video link here]
+(https://drive.google.com/file/d/1USxn_T5xEZxhWQG7rTO9snMKS4mgK2eN/view?usp=drive_link)
 
 *The demo shows document editing, formatting, multiple documents, normal Undo/Redo, Dark Mode, and eventually the System Undo sequence.*
 
 ### Additional Demos
 
-* Live Demo: [Add deployed URL]
+* Live Demo: https://useless-project-temp-eight-beta.vercel.app/
 * GitHub Repository: https://github.com/ASP-31/useless_project_temp
 
 ---
@@ -525,21 +529,26 @@ http://localhost:5173
 
 ### Arjun S Pai
 
-* Project development
-* UI / UX development
-* [Add specific contributions]
+* Core project development
+* Undo/Redo history system
+* System Undo logic
+* Website destruction sequence
+* UI destruction/reconstruction logic
+* LocalStorage persistence
+* Testing and deployment
 
 ### Ahmed Nasim
 
 * Project setup and development
-* Undo/Redo history system
+* UI / UX design and implementation
 * Editor functionality
-* Document management
-* LocalStorage persistence
-* System Undo logic
-* UI and destruction sequence
+* Rich text editor interface
 * Dark Mode implementation
-* Testing and deployment
+* Responsive layout
+* Animations and visual effects
+* Destruction/reconstruction UI
+* Document management
+
 
 ---
 
