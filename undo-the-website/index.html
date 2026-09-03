@@ -489,9 +489,23 @@
     <div id="final-state" class="final-state">
       <h1>404: Website Undone.</h1>
       <p>There is nothing left to undo.</p>
-      <a href="#" id="redo-website">
-        [ Press Ctrl+Y to Redo the Website ]
-      </a>
+
+      <button id="redo-website" class="redo-website-btn">
+        ↶ Undo the Undo
+      </button>
+      <span class="redo-website-note">(undo this whole mess)</span>
+    </div>
+
+    <!-- RECONSTRUCTION LOADING OVERLAY -->
+    <!-- Full-screen scrim shown on top while the website re-assembles beneath it. -->
+    <div id="rebuild-overlay" class="rebuild-overlay" hidden>
+      <div class="rebuild-status">
+        <span class="rebuild-spinner"></span>
+        <strong id="rebuild-text">Undoing the undo...</strong>
+      </div>
+      <div class="rebuild-track">
+        <div id="rebuild-progress" class="rebuild-progress"></div>
+      </div>
     </div>
 
     <script type="module" src="/src/main.js"></script>

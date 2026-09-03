@@ -726,9 +726,70 @@ function restoreAllWebsite() {
   destructionStage = 0;
 
   showToast("Website Restored", "All components restored.");
-
   updateSystemStatus();
   updateHistoryUI();
+
+  // Dramatic reconstruction: animate major components flying back into place.
+  reconstructWithAnimations();
+}
+
+let reconstructionTimeout = null;
+
+function reconstructWithAnimations() {
+  if (reconstructionTimeout) {
+    clearTimeout(reconstructionTimeout);
+  }
+
+  const components = [
+    // [selector, direction]
+    [".app-footer", "bottom"],
+    [".sidebar", "left"],
+    ["#editor-toolbar", "top"],
+    ["#editor-card", "center"],
+    ["#app-header", "top"],
+    ["#undo-indicator", "bottom"],
+  ];
+
+  const awayClasses = {
+    left: "pose-left",
+    right: "pose-right",
+    top: "pose-top",
+    bottom: "pose-bottom",
+    center: "pose-center",
+  };
+
+  // Phase 1 — send everything off-screen / hidden so they can fly back in.
+  components.forEach(([selector, direction]) => {
+    const el = document.querySelector(selector);
+    if (!el || !awayClasses[direction]) return;
+
+    el.classList.remove("fly-in-away", "pose-left", "pose-right", "pose-top", "pose-bottom", "pose-center");
+    void el.offsetWidth;
+    el.classList.add(awayClasses[direction]);
+    el.dataset.fly = direction;
+  });
+
+  // Phase 2 — fly each component back in, spread across the reconstruction window.
+  const startDelay = 600;
+  const gap = 1300; // spread over ~9s for 6 components
+  components.forEach(([selector, direction], index) => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+
+    setTimeout(() => {
+      el.classList.remove("pose-left", "pose-right", "pose-top", "pose-bottom", "pose-center");
+      el.classList.add("fly-in-away");
+    }, startDelay + index * gap);
+  });
+
+  reconstructionTimeout = setTimeout(() => {
+    components.forEach(([selector]) => {
+      const el = document.querySelector(selector);
+      if (!el) return;
+      el.classList.remove("fly-in-away", "pose-left", "pose-right", "pose-top", "pose-bottom", "pose-center");
+      delete el.dataset.fly;
+    });
+  }, startDelay + components.length * gap + 900);
 }
 
 // ==========================================
@@ -1389,13 +1450,88 @@ document.addEventListener("keydown", (event) => {
 });
 
 // ==========================================
-// REDO THE WEBSITE LINK (final state)
+// REDO THE WEBSITE — UNDO THE UNDO
 // ==========================================
+
+const rebuildOverlay = document.getElementById("rebuild-overlay");
+const rebuildText = document.getElementById("rebuild-text");
+const rebuildProgress = document.getElementById("rebuild-progress");
+
+const rebuildPhrases = [
+  "Undoing the undo...",
+  "Gathering lost bytes...",
+  "Reassembling the footer...",
+  "Rebuilding the sidebar...",
+  "Restoring the document list...",
+  "Reattaching the toolbar...",
+  "Reviving the formatting...",
+  "Un-folding the editor...",
+  "Restoring your content...",
+  "Reconstructing the header...",
+  "Rebooting the system status...",
+  "Ungluing the undo button...",
+  "Polishing the layout...",
+  "Almost there...",
+  "Done. This time, maybe don't press Ctrl+Z?",
+];
+
+const REBUILD_MS = 12000;
+
+function rebuildWebsiteSequence() {
+  if (!redoWebsiteLink || !rebuildOverlay) return;
+
+  // Hide the final state, restore the website beneath the overlay,
+  // then fade the overlay out after the reconstruction finishes.
+  if (finalState) finalState.classList.remove("visible");
+
+  redoWebsiteLink.classList.add("loading");
+
+  restoreAllWebsite();
+
+  rebuildOverlay.classList.remove("fading");
+  rebuildOverlay.hidden = false;
+
+  let step = 0;
+  const stepMs = REBUILD_MS / rebuildPhrases.length;
+
+  const interval = setInterval(() => {
+    step++;
+    const progress = Math.min(step / rebuildPhrases.length, 1) * 100;
+
+    if (rebuildProgress) rebuildProgress.style.width = `${progress}%`;
+
+    const phraseIdx = Math.floor((step / rebuildPhrases.length) * rebuildPhrases.length);
+    if (rebuildText && rebuildPhrases[phraseIdx]) {
+      rebuildText.textContent = rebuildPhrases[phraseIdx];
+    }
+
+    if (step >= rebuildPhrases.length) {
+      clearInterval(interval);
+      finishReconstruction();
+    }
+  }, stepMs);
+}
+
+function finishReconstruction() {
+  redoWebsiteLink.classList.remove("loading");
+
+  // Fade the overlay out to reveal the reconstructed website.
+  rebuildOverlay.classList.add("fading");
+
+  setTimeout(() => {
+    rebuildOverlay.hidden = true;
+    rebuildOverlay.classList.remove("fading");
+    if (rebuildProgress) rebuildProgress.style.width = "0%";
+
+    updateSystemStatus();
+    updateHistoryUI();
+  }, 650);
+}
 
 if (redoWebsiteLink) {
   redoWebsiteLink.addEventListener("click", (e) => {
     e.preventDefault();
-    restoreAllWebsite();
+    rebuildWebsiteSequence();
   });
 }
 
