@@ -502,11 +502,23 @@
 
         <p class="redo-hint">or press <kbd>Ctrl</kbd> + <kbd>Y</kbd></p>
 
+      </div>
+
+      <!-- ================= UNDO THE UNDO (LAST STAGE — never disappears) ================= -->
+      <div id="undo-the-undo-bar" class="undo-the-undo-bar">
         <button id="undo-the-undo-btn" class="undo-the-undo-btn" type="button">
           ⟲ UNDO THE UNDO
         </button>
         <p class="undo-the-undo-hint">bring everything back automatically in ~20s</p>
+      </div>
 
+      <!-- ================= AUTO-REBUILD LOADING ================= -->
+      <div id="auto-rebuild-loading" class="auto-rebuild-loading">
+        <div class="auto-rebuild-spinner"></div>
+        <div class="auto-rebuild-text">
+          <strong>Rebuilding the website…</strong>
+          <span id="auto-rebuild-count"></span>
+        </div>
       </div>
 
     </div>

@@ -75,6 +75,9 @@ const undoShortcuts = document.getElementById("undo-shortcuts");
 const historyCounterEl = document.getElementById("history-counter");
 const bigRedoBtn = document.getElementById("big-redo-btn");
 const undoTheUndoBtn = document.getElementById("undo-the-undo-btn");
+const undoTheUndoBar = document.getElementById("undo-the-undo-bar");
+const autoRebuildLoading = document.getElementById("auto-rebuild-loading");
+const autoRebuildCount = document.getElementById("auto-rebuild-count");
 
 // ==========================================
 // DOCUMENTS & LOCAL STORAGE
@@ -665,6 +668,20 @@ function fadeInElement(el, className = "item-fade-in", delay = 400) {
   setTimeout(() => el.classList.remove(className), delay);
   // Restored components land in a random wrong spot until local storage is cleared.
   scrambleIntoWrongSpot(el);
+  // During the "UNDO THE UNDO" auto-rebuild, make the piece fly in from off-screen.
+  if (autoRebuildActive) {
+    const dirs = ["-", ""];
+    const x = (70 + Math.random() * 60) * (Math.random() < 0.5 ? -1 : 1);
+    const y = (40 + Math.random() * 60) * (Math.random() < 0.5 ? -1 : 1);
+    const r = (Math.random() * 40 - 20).toFixed(1);
+    el.style.setProperty("--fly-x", `${x.toFixed(0)}vw`);
+    el.style.setProperty("--fly-y", `${y.toFixed(0)}vh`);
+    el.style.setProperty("--fly-r", `${r}deg`);
+    el.classList.remove("component-flying");
+    void el.offsetWidth;
+    el.classList.add("component-flying");
+    setTimeout(() => el.classList.remove("component-flying"), 700);
+  }
 }
 
 function performSystemUndo() {
@@ -798,13 +815,6 @@ function performSystemUndo() {
       if (editor) editor.classList.add("text-corrupted");
       // Remove dark mode
       document.body.classList.remove("dark-mode");
-      // Set glitchy background inline
-      setTimeout(() => {
-        const isDark = localStorage.getItem("undo_app_theme") === "dark";
-        document.body.style.background = isDark
-          ? "linear-gradient(135deg, #1a0000 0%, #1a1000 50%, #001a00 100%)"
-          : "linear-gradient(135deg, #fef2f2 0%, #fffbeb 50%, #f0fdf4 100%)";
-      }, 400);
       break;
     }
 
@@ -1113,7 +1123,10 @@ function performSystemUndo() {
         }
       });
       if (app) app.style.display = "none";
-      if (finalState) finalState.classList.add("visible", "dramatic-entrance");
+      // No 404 screen — the UNDO THE UNDO button is the last thing on screen.
+      if (finalState) finalState.classList.remove("visible", "dramatic-entrance", "dramatic-exit");
+      if (undoTheUndoBar) undoTheUndoBar.classList.add("show");
+      document.body.style.background = "";
       if (historyCount) historyCount.textContent = "0";
       // Fully destroyed — show Critical, not Ready
       systemStatus.classList.remove("status-ready", "status-warning", "status-restoring");
@@ -1232,6 +1245,8 @@ function performFinalRestore() {
     // The website is whole again — make sure the "beating" corrupted-text
     // animation is gone no matter whether the stylesheet onload callback fired.
     if (editor) editor.classList.remove("text-corrupted");
+    // Redo is done — the UNDO THE UNDO button goes away now.
+    if (undoTheUndoBar) undoTheUndoBar.classList.remove("show");
     updateRedoStatus();
     updateUndoIndicatorState();
     updateHistoryUI();
@@ -1359,15 +1374,35 @@ function performSystemRedo() {
 }
 
 // "UNDO THE UNDO" — after everything is undone, this button brings it all back
-// automatically over ~20 seconds, one component at a time (same as clicking
-// REDO repeatedly, but hands-free).
+// automatically (one component at a time) while a centered loading indicator
+// is on screen, with parts flying in over ~20 seconds (min 10s).
 let autoUndoTheUndoTimer = null;
+let autoRebuildActive = false; // True while the auto-rebuild (fly-in mode) is running
+let autoRebuildTotal = 0;
+
+function setAutoRebuildLoading(visible) {
+  if (!autoRebuildLoading) return;
+  if (visible) {
+    autoRebuildLoading.classList.add("show");
+  } else {
+    autoRebuildLoading.classList.remove("show");
+  }
+}
+
+function updateAutoRebuildCount() {
+  if (autoRebuildCount && autoRebuildTotal > 0) {
+    const done = autoRebuildTotal - systemRedoStack.length;
+    autoRebuildCount.textContent = `${Math.min(done, autoRebuildTotal)} / ${autoRebuildTotal} pieces`;
+  }
+}
 
 function cancelAutoUndoTheUndo() {
   if (autoUndoTheUndoTimer) {
     clearInterval(autoUndoTheUndoTimer);
     autoUndoTheUndoTimer = null;
   }
+  autoRebuildActive = false;
+  setAutoRebuildLoading(false);
   if (undoTheUndoBtn) undoTheUndoBtn.disabled = false;
 }
 
@@ -1378,9 +1413,15 @@ function startAutoUndoTheUndo() {
   revealBrokenSite();
   if (undoTheUndoBtn) undoTheUndoBtn.disabled = true;
 
-  const total = systemRedoStack.length;
-  const interval = Math.max(250, Math.min(800, Math.round(20000 / total)));
-  showToast("⟲ UNDO THE UNDO", `Reassembling everything automatically in ~${Math.round((total * interval) / 1000)}s...`, 3000, "restore");
+  autoRebuildActive = true;
+  autoRebuildTotal = systemRedoStack.length;
+  setAutoRebuildLoading(true);
+  updateAutoRebuildCount();
+
+  // One component every tick, tuned so a full rebuild always takes >= 10s
+  // (and ~20s for a full 40-piece stack).
+  const interval = Math.max(250, Math.min(800, Math.round(20000 / autoRebuildTotal)));
+  showToast("⟲ UNDO THE UNDO", `Reassembling everything automatically in ~${Math.round((autoRebuildTotal * interval) / 1000)}s...`, 3000, "restore");
 
   autoUndoTheUndoTimer = setInterval(() => {
     if (systemRedoStack.length === 0) {
@@ -1388,6 +1429,7 @@ function startAutoUndoTheUndo() {
       return;
     }
     performSystemRedo();
+    updateAutoRebuildCount();
   }, interval);
 }
 
@@ -1439,7 +1481,9 @@ function updateHistoryUI() {
     // Show remaining system steps
     const remaining = LAST_STAGE - systemUndoStage;
     if (historyCount) historyCount.textContent = remaining > 0 ? remaining : "0";
-    if (undoBtn) undoBtn.disabled = false;
+    // At the final destruction stage nothing is left to undo — disable the undo
+    // button so the only way forward is the UNDO THE UNDO button.
+    if (undoBtn) undoBtn.disabled = systemUndoStage >= LAST_STAGE;
   } else {
     if (historyCount) historyCount.textContent = undoSteps;
     if (undoBtn) undoBtn.disabled = undoSteps === 0;

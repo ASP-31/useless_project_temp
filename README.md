@@ -228,7 +228,18 @@ But there's a twist — as of the latest update redo **does not** put things bac
 
 #### Undo The Undo (Auto-Restore)
 
-On the 404 screen there is now a **"⟲ UNDO THE UNDO"** button. Clicking it brings **everything back automatically** over **~20 seconds** (one component at a time, same as clicking REDO repeatedly). Manual REDO / Ctrl+Y cancels the auto-restore and returns control to the user.
+When the website is fully undone, the **"⟲ UNDO THE UNDO"** button is the **last thing on screen**:
+
+* No busy 404 background or red/green gradient — the screen is clean, with only the **UNDO THE UNDO** button.
+* The button stays on screen through the undoing process and never flickers away.
+* It **goes away after redo** — once the website is rebuilt, the button disappears.
+
+Clicking it triggers the auto-rebuild experience:
+
+* A **centered loading screen** (spinner + "Rebuilding the website… X / N pieces" counter) appears **immediately** when clicked.
+* Components **fly in** one at a time from random off-screen directions, landing in scrambled/wrong positions.
+* The whole rebuild takes **~20 seconds** (always at least 10s).
+* Manual REDO / Ctrl+Y cancels the auto-rebuild and returns control to the user.
 
 #### Animations
 
@@ -391,7 +402,11 @@ Features include:
 * [x] Dark mode support for all destruction/restore animations
 * [x] Full redo capability (Ctrl+Y or redo button)
 * [x] Redo restores parts in scrambled / wrong positions (fix requires clearing `localStorage`)
-* [x] "UNDO THE UNDO" button — automatic full rebuild over ~20s
+* [x] "UNDO THE UNDO" button — automatic full rebuild over ~20s (min 10s)
+* [x] Auto-rebuild shows a centered loading screen immediately on click (spinner + piece counter)
+* [x] Auto-rebuild components fly in one-by-one from off-screen into scrambled positions
+* [x] "UNDO THE UNDO" is the last thing on screen — no 404 screen / red-green gradient at the end
+* [x] "UNDO THE UNDO" stays visible during undo and goes away after redo is complete
 * [x] Edit shorthand — editor region shortened so it isn't covered by the undo/redo bar
 * [x] Save button moved next to the "··· more options" button in the action bar
 

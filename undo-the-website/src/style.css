@@ -1017,9 +1017,45 @@ body.dark-mode .redo-hint kbd {
   color: #e5e7eb;
 }
 
-/* Undo The Undo — auto-restore button on the 404 screen */
+/* Undo The Undo — auto-restore button (LAST STAGE, never disappears) */
+.undo-the-undo-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+
+  z-index: 9990;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  padding: 16px 26px;
+
+  border: 1px solid rgba(49, 46, 129, 0.35);
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.25);
+
+  backdrop-filter: blur(6px);
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(20px);
+
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.undo-the-undo-bar.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
 .undo-the-undo-btn {
-  margin: 30px 0 8px;
+  margin: 0;
   padding: 14px 36px;
   font-size: 17px;
   font-weight: 700;
@@ -1057,6 +1093,11 @@ body.dark-mode .redo-hint kbd {
 body.dark-mode .undo-the-undo-btn {
   background: #4338ca;
   border-color: #312e81;
+}
+
+body.dark-mode .undo-the-undo-bar {
+  background: rgba(15, 23, 42, 0.94);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
 body.dark-mode .undo-the-undo-hint {
@@ -2626,4 +2667,110 @@ body.dark-mode .toast-progress {
 
 .screen-glitch {
   animation: screenGlitchEffect 300ms linear;
+}
+
+/* =========================================
+   AUTO-REBUILD LOADING OVERLAY + FLY-IN
+========================================= */
+
+.auto-rebuild-loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 18px 26px;
+
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+
+  backdrop-filter: blur(6px);
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.9);
+
+  transition: opacity 250ms ease, transform 250ms ease;
+}
+
+.auto-rebuild-loading.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.auto-rebuild-spinner {
+  width: 30px;
+  height: 30px;
+
+  flex-shrink: 0;
+
+  border: 3px solid var(--indigo-light);
+  border-top-color: var(--indigo);
+  border-radius: 50%;
+
+  animation: autoRebuildSpin 0.8s linear infinite;
+}
+
+@keyframes autoRebuildSpin {
+  to { transform: rotate(360deg); }
+}
+
+.auto-rebuild-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  color: var(--text);
+  font-size: 15px;
+}
+
+.auto-rebuild-text strong {
+  font-size: 15px;
+}
+
+.auto-rebuild-text span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+body.dark-mode .auto-rebuild-loading {
+  background: rgba(15, 23, 42, 0.92);
+}
+
+body.dark-mode .auto-rebuild-text {
+  color: #e2e8f0;
+}
+
+/* Components fly in — from a random off-screen start into their resting
+   (scrambled) position. The start offset is set per-element in JS via the
+   --fly-x and --fly-y custom properties. */
+@keyframes componentFlyIn {
+  from {
+    transform: translate(var(--fly-x, -70vw), var(--fly-y, -50vh)) scale(0.3) rotate(var(--fly-r, 0deg));
+    opacity: 0;
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.component-flying {
+  animation: componentFlyIn 650ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+body.dark-mode .component-flying {
+  animation-name: componentFlyIn;
 }
