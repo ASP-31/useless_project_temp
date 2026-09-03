@@ -1,0 +1,21 @@
+{
+  "name": "useless_project_temp",
+  "version": "1.0.0",
+  "description": "> **What if Ctrl+Z didn't know when to stop?**",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ASP-31/useless_project_temp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ASP-31/useless_project_temp/issues"
+  },
+  "homepage": "https://github.com/ASP-31/useless_project_temp#readme"
+}

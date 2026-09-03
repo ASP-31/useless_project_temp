@@ -17,6 +17,11 @@ const sidebar = document.getElementById("sidebar");
 const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
 const headerSidebarToggleBtn = document.getElementById("header-sidebar-toggle-btn");
 const brandLink = document.getElementById("brand-link");
+const appFooter = document.getElementById("app-footer");
+const appHeader = document.getElementById("app-header");
+const editorCard = document.getElementById("editor-card");
+const finalState = document.getElementById("final-state");
+const undoIndicator = document.getElementById("undo-indicator");
 
 // Toolbar elements
 const textStyleBtn = document.getElementById("text-style-btn");
@@ -48,6 +53,11 @@ const systemToast = document.getElementById("system-toast");
 const toastTitle = document.getElementById("toast-title");
 const toastMessage = document.getElementById("toast-message");
 const themeToggleBtn = document.getElementById("theme-toggle-btn");
+
+// System undo elements
+const systemStatus = document.getElementById("system-status");
+const mainContent = document.getElementById("main-content");
+const app = document.getElementById("app");
 
 // ==========================================
 // DOCUMENTS & LOCAL STORAGE
@@ -170,6 +180,55 @@ const history = [];
 const redoHistory = [];
 let saveStateTimeout = null;
 let isTyping = false;
+let systemUndoStage = 0;
+const SYSTEM_UNDO_STAGES = {
+  FOOTER: 1,
+  SIDEBAR: 2,
+  CSS: 3,
+  TOOLBAR: 4,
+  HEADER: 5,
+  EDITOR: 6,
+  DONE: 7
+};
+
+// System undo toast messages — dramatic!
+const SYSTEM_UNDO_MESSAGES = {
+  [SYSTEM_UNDO_STAGES.FOOTER]: {
+    title: "⚠ System Undo Activated",
+    message: "User history exhausted. Undoing footer...",
+    type: "warning"
+  },
+  [SYSTEM_UNDO_STAGES.SIDEBAR]: {
+    title: "⚠ System Undo",
+    message: "Undoing sidebar...",
+    type: "warning"
+  },
+  [SYSTEM_UNDO_STAGES.CSS]: {
+    title: "🔴 CSS CORRUPTED",
+    message: "Undoing CSS... Styles are unraveling.",
+    type: "danger"
+  },
+  [SYSTEM_UNDO_STAGES.TOOLBAR]: {
+    title: "🔴 CRITICAL",
+    message: "Undoing toolbar... Editing functions disabled.",
+    type: "danger"
+  },
+  [SYSTEM_UNDO_STAGES.HEADER]: {
+    title: "🔴 CRITICAL",
+    message: "Undoing header... Navigation lost.",
+    type: "danger"
+  },
+  [SYSTEM_UNDO_STAGES.EDITOR]: {
+    title: "💀 UNDO BUTTON UNSTABLE",
+    message: "Undoing editor... There is nothing left.",
+    type: "danger"
+  },
+  [SYSTEM_UNDO_STAGES.DONE]: {
+    title: "💀 Website Undone",
+    message: "The website has been completely undone.",
+    type: "danger"
+  }
+};
 
 function captureSnapshot() {
   return {
@@ -205,20 +264,264 @@ function flushPendingState() {
 function undo() {
   flushPendingState();
 
-  if (history.length <= 1) {
+  if (history.length > 1) {
+    const currentState = history.pop();
+    redoHistory.push(currentState);
+
+    const previousState = history[history.length - 1];
+    editor.innerHTML = previousState.html;
+
+    editor.focus();
+    setCaretOffset(editor, previousState.caret);
+
+    updateActiveDocumentContent();
+    updateHistoryUI();
+    updateToolbarState();
     return;
   }
 
-  const currentState = history.pop();
-  redoHistory.push(currentState);
+  // History exhausted — switch to system undo
+  if (systemUndoStage < SYSTEM_UNDO_STAGES.DONE) {
+    systemUndoStage++;
+    performSystemUndo();
+    updateHistoryUI();
+  }
+}
 
-  const previousState = history[history.length - 1];
-  editor.innerHTML = previousState.html;
+function shakeScreen() {
+  if (app) {
+    app.classList.remove("screen-shake");
+    void app.offsetWidth; // force reflow
+    app.classList.add("screen-shake");
+    setTimeout(() => app.classList.remove("screen-shake"), 250);
+  }
+}
 
-  editor.focus();
-  setCaretOffset(editor, previousState.caret);
+function updateSystemStatus(stage) {
+  if (!systemStatus) return;
+  systemStatus.classList.remove("status-ready", "status-warning", "status-danger");
 
-  updateActiveDocumentContent();
+  if (stage === 0) {
+    systemStatus.classList.add("status-ready");
+    systemStatus.innerHTML = '<span class="status-dot"></span> Ready';
+  } else if (stage <= 2) {
+    systemStatus.classList.add("status-warning");
+    systemStatus.innerHTML = '<span class="status-dot"></span> Warning';
+  } else {
+    systemStatus.classList.add("status-danger");
+    systemStatus.innerHTML = '<span class="status-dot"></span> Critical';
+  }
+}
+
+function updateUndoIndicatorState() {
+  if (!undoIndicator) return;
+  undoIndicator.classList.remove("warning", "unstable");
+
+  const historyCounter = undoIndicator.querySelector(".history-counter");
+  if (historyCounter) {
+    historyCounter.classList.remove("warning", "danger");
+  }
+
+  if (systemUndoStage > 0 && systemUndoStage < SYSTEM_UNDO_STAGES.DONE) {
+    if (systemUndoStage >= SYSTEM_UNDO_STAGES.EDITOR) {
+      undoIndicator.classList.add("unstable");
+      const undoActionBtn = undoIndicator.querySelector("#undo-btn");
+      if (undoActionBtn) undoActionBtn.classList.add("undo-btn-unstable");
+      if (historyCounter) historyCounter.classList.add("danger");
+    } else if (systemUndoStage >= SYSTEM_UNDO_STAGES.CSS) {
+      undoIndicator.classList.add("warning");
+      if (historyCounter) historyCounter.classList.add("warning");
+    }
+  } else {
+    const undoActionBtn = undoIndicator.querySelector("#undo-btn");
+    if (undoActionBtn) undoActionBtn.classList.remove("undo-btn-unstable");
+  }
+}
+
+function performSystemUndo() {
+  // Add shake to every system undo
+  shakeScreen();
+
+  // Show dramatic toast
+  const msg = SYSTEM_UNDO_MESSAGES[systemUndoStage];
+  if (msg) {
+    showToast(msg.title, msg.message, 2500, msg.type);
+  }
+
+  // Update status badge
+  updateSystemStatus(systemUndoStage);
+
+  switch (systemUndoStage) {
+    case SYSTEM_UNDO_STAGES.FOOTER:
+      if (appFooter) {
+        appFooter.classList.add("footer-destroying");
+        setTimeout(() => {
+          appFooter.style.display = "none";
+        }, 400);
+      }
+      break;
+
+    case SYSTEM_UNDO_STAGES.SIDEBAR:
+      if (sidebar) {
+        sidebar.classList.add("undo-slide-out");
+        setTimeout(() => {
+          sidebar.style.display = "none";
+        }, 500);
+      }
+      break;
+
+    case SYSTEM_UNDO_STAGES.CSS:
+      // Corrupt the editor text
+      if (editor) {
+        editor.classList.add("text-corrupted");
+      }
+      // Add CSS destruction animation to the body
+      document.body.classList.add("css-destroyed");
+      // Remove dark mode and corrupt background
+      document.body.classList.remove("dark-mode");
+      setTimeout(() => {
+        document.body.style.background = "linear-gradient(135deg, #fef2f2 0%, #fffbeb 50%, #f0fdf4 100%)";
+      }, 400);
+      break;
+
+    case SYSTEM_UNDO_STAGES.TOOLBAR:
+      // Collapse the editor card dramatically
+      if (editorCard) {
+        editorCard.classList.add("editor-destroying");
+        setTimeout(() => {
+          editorCard.style.display = "none";
+        }, 700);
+      }
+      // Fade out undo indicator slowly
+      if (undoIndicator) {
+        undoIndicator.classList.add("undo-fade-out");
+        setTimeout(() => {
+          undoIndicator.style.display = "none";
+          undoIndicator.classList.remove("undo-fade-out");
+        }, 400);
+      }
+      break;
+
+    case SYSTEM_UNDO_STAGES.HEADER:
+      if (appHeader) {
+        appHeader.classList.add("header-destroying");
+        setTimeout(() => {
+          appHeader.style.display = "none";
+        }, 600);
+      }
+      break;
+
+    case SYSTEM_UNDO_STAGES.EDITOR:
+      // Last warning shake
+      shakeScreen();
+      setTimeout(() => shakeScreen(), 150);
+      if (editor) {
+        editor.innerHTML = "<p style='text-align:center; color:#ef4444; font-size:18px;'>Last function removed...</p>";
+      }
+      break;
+
+    case SYSTEM_UNDO_STAGES.DONE:
+      // Final dramatic entrance
+      if (app) {
+        app.style.display = "none";
+      }
+      if (finalState) {
+        finalState.classList.add("visible", "dramatic-entrance");
+      }
+      if (historyCount) {
+        historyCount.textContent = "0";
+      }
+      updateSystemStatus(0);
+      // Final toast
+      showToast("💀 Website Undone", "There is nothing left to undo. Press Ctrl+Y to redo the website.", 5000, "danger");
+      break;
+  }
+
+  // Update undo indicator state after changes
+  setTimeout(() => updateUndoIndicatorState(), 100);
+}
+
+function performSystemRedo() {
+  // Show a toast for redo
+  if (systemUndoStage === SYSTEM_UNDO_STAGES.DONE) {
+    showToast("↻ System Redo", "Restoring the website...", 1500);
+  }
+
+  if (systemUndoStage >= SYSTEM_UNDO_STAGES.DONE) {
+    if (finalState) {
+      finalState.classList.remove("visible", "dramatic-entrance");
+    }
+    if (app) {
+      app.style.display = "";
+    }
+    if (undoIndicator) {
+      undoIndicator.style.display = "";
+      undoIndicator.classList.remove("undo-fade-out", "warning", "unstable");
+    }
+    if (historyCount) {
+      historyCount.textContent = String(Math.max(history.length - 1, 0));
+    }
+    systemUndoStage--;
+  }
+
+  if (systemUndoStage === SYSTEM_UNDO_STAGES.EDITOR) {
+    // Restore editor content from history
+    if (editor && history.length > 0) {
+      const lastState = history[history.length - 1];
+      editor.innerHTML = lastState.html;
+    }
+    systemUndoStage--;
+  }
+
+  if (systemUndoStage === SYSTEM_UNDO_STAGES.HEADER) {
+    if (appHeader) {
+      appHeader.style.display = "";
+      appHeader.classList.remove("header-destroying");
+    }
+    systemUndoStage--;
+  }
+
+  if (systemUndoStage === SYSTEM_UNDO_STAGES.TOOLBAR) {
+    if (editorCard) {
+      editorCard.style.display = "";
+      editorCard.classList.remove("editor-destroying");
+    }
+    systemUndoStage--;
+  }
+
+  if (systemUndoStage === SYSTEM_UNDO_STAGES.CSS) {
+    document.body.classList.remove("css-destroyed");
+    document.body.style.background = "";
+    // Re-apply saved theme
+    const savedTheme = localStorage.getItem("undo_app_theme") || "light";
+    if (savedTheme === "dark") {
+      document.body.classList.add("dark-mode");
+    }
+    if (editor) {
+      editor.classList.remove("text-corrupted");
+    }
+    systemUndoStage--;
+  }
+
+  if (systemUndoStage === SYSTEM_UNDO_STAGES.SIDEBAR) {
+    if (sidebar) {
+      sidebar.style.display = "";
+      sidebar.classList.remove("undo-slide-out");
+    }
+    systemUndoStage--;
+  }
+
+  if (systemUndoStage === SYSTEM_UNDO_STAGES.FOOTER) {
+    if (appFooter) {
+      appFooter.style.display = "";
+      appFooter.classList.remove("footer-destroying");
+    }
+    systemUndoStage--;
+  }
+
+  // Update system status and undo indicator
+  updateSystemStatus(systemUndoStage);
+  updateUndoIndicatorState();
   updateHistoryUI();
   updateToolbarState();
 }
@@ -243,9 +546,16 @@ function redo() {
 
 function updateHistoryUI() {
   const undoSteps = Math.max(history.length - 1, 0);
-  if (historyCount) historyCount.textContent = undoSteps;
+  const hasSystemUndo = systemUndoStage < SYSTEM_UNDO_STAGES.DONE;
 
-  if (undoBtn) undoBtn.disabled = undoSteps === 0;
+  if (systemUndoStage > 0 && hasSystemUndo) {
+    if (historyCount) historyCount.textContent = "SYSTEM";
+    if (undoBtn) undoBtn.disabled = false;
+  } else {
+    if (historyCount) historyCount.textContent = undoSteps;
+    if (undoBtn) undoBtn.disabled = undoSteps === 0 && !hasSystemUndo;
+  }
+
   if (redoBtn) redoBtn.disabled = redoHistory.length === 0;
 }
 
@@ -254,11 +564,18 @@ function updateHistoryUI() {
 // ==========================================
 
 let toastTimeout = null;
-function showToast(title, message, duration = 3000) {
+function showToast(title, message, duration = 3000, type = "warning") {
   if (!systemToast || !toastTitle || !toastMessage) return;
 
   toastTitle.textContent = title;
   toastMessage.textContent = message;
+
+  // Set toast type (warning or danger)
+  systemToast.classList.remove("danger");
+  if (type === "danger") {
+    systemToast.classList.add("danger");
+  }
+
   systemToast.classList.add("visible");
 
   clearTimeout(toastTimeout);
@@ -892,7 +1209,15 @@ document.addEventListener("keydown", (event) => {
     event.code === "KeyY"
   ) {
     event.preventDefault();
-    redo();
+    if (systemUndoStage >= SYSTEM_UNDO_STAGES.DONE) {
+      // System Redo — restore the website
+      performSystemRedo();
+    } else if (systemUndoStage > 0) {
+      // Mid-way through system undo, redo one stage
+      performSystemRedo();
+    } else {
+      redo();
+    }
   }
 });
 
