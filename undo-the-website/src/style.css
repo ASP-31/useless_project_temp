@@ -1645,6 +1645,31 @@ body.dark-mode .document-title {
   transform-origin: top;
 }
 
+/* Toolbar restore — reverse the collapse */
+@keyframes toolbarRestore {
+  0% {
+    opacity: 0;
+    transform: scaleY(0);
+    max-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  50% {
+    opacity: 0.6;
+    transform: scaleY(0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+    max-height: 200px;
+  }
+}
+
+.toolbar-restoring {
+  animation: toolbarRestore 500ms ease forwards;
+  transform-origin: top;
+}
+
 /* Editor card destruction */
 @keyframes editorDestroy {
   0% {
@@ -1869,4 +1894,498 @@ body.dark-mode .system-toast.danger .toast-content span {
 
 .history-counter.warning strong {
   color: #f59e0b;
+}
+
+/* ==========================================
+   INDIVIDUAL ITEM ANIMATIONS
+   ========================================== */
+
+/* Fade out — individual items */
+@keyframes itemFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+  }
+  40% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+    filter: blur(2px);
+  }
+}
+
+.item-fade-out {
+  animation: itemFadeOut 300ms ease forwards;
+}
+
+/* Fade in — individual items (restore) */
+@keyframes itemFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 0.8;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: none;
+  }
+}
+
+.item-fade-in {
+  animation: itemFadeIn 400ms ease forwards;
+}
+
+
+/* ==========================================
+   SYSTEM REDO — RESTORE ANIMATIONS
+   ========================================== */
+
+/* Footer restore — slide up from below */
+@keyframes footerRestore {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  60% {
+    opacity: 0.7;
+    transform: translateY(-5%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.footer-restoring {
+  animation: footerRestore 500ms ease forwards;
+}
+
+/* Sidebar restore — slide in from left */
+@keyframes sidebarRestore {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateX(3%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sidebar-restoring {
+  animation: sidebarRestore 500ms ease forwards;
+}
+
+/* CSS restore — reverse the filter corruption */
+@keyframes cssRestore {
+  0% {
+    filter: grayscale(1) blur(0.5px);
+    opacity: 0.8;
+  }
+  30% {
+    filter: hue-rotate(270deg) saturate(0.3) blur(1px);
+  }
+  60% {
+    filter: hue-rotate(180deg) brightness(1.2) contrast(0.8);
+  }
+  80% {
+    filter: hue-rotate(90deg) saturate(1.5);
+  }
+  100% {
+    filter: none;
+    opacity: 1;
+  }
+}
+
+/* Dark mode — start from darker destroyed state */
+@keyframes cssRestoreDark {
+  0% {
+    filter: grayscale(1) blur(0.5px) brightness(0.7);
+    opacity: 0.8;
+  }
+  30% {
+    filter: hue-rotate(270deg) saturate(0.3) blur(1px) brightness(0.8);
+  }
+  60% {
+    filter: hue-rotate(180deg) brightness(0.8) contrast(1.2);
+  }
+  80% {
+    filter: hue-rotate(90deg) saturate(1.5);
+  }
+  100% {
+    filter: none;
+    opacity: 1;
+  }
+}
+
+.css-restoring {
+  animation: cssRestore 800ms ease forwards;
+}
+
+body.dark-mode .css-restoring {
+  animation: cssRestoreDark 800ms ease forwards;
+}
+
+/* Editor card restore — reverse the 3D collapse */
+@keyframes editorRestore {
+  0% {
+    opacity: 0;
+    transform: perspective(800px) rotateX(15deg) translateY(20px);
+    border-radius: 0;
+  }
+  30% {
+    opacity: 0.4;
+    transform: perspective(800px) rotateX(8deg) translateY(10px);
+    border-radius: 6px;
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.2);
+  }
+  60% {
+    transform: perspective(800px) rotateX(3deg) translateY(3px);
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0deg) translateY(0);
+    border-radius: 18px;
+    box-shadow:
+      0 20px 45px rgba(15, 23, 42, 0.08),
+      0 4px 12px rgba(15, 23, 42, 0.04);
+  }
+}
+
+.editor-restoring {
+  animation: editorRestore 600ms ease forwards;
+}
+
+/* Header restore — slide down from above */
+@keyframes headerRestore {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+    filter: blur(4px);
+  }
+  40% {
+    filter: blur(2px) brightness(1.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: none;
+  }
+}
+
+.header-restoring {
+  animation: headerRestore 500ms ease forwards;
+}
+
+/* Undo indicator restore — fade + scale in */
+@keyframes indicatorRestore {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.indicator-restoring {
+  animation: indicatorRestore 400ms ease forwards;
+}
+
+/* Editor content restore — gentle fade in */
+@keyframes editorContentRestore {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.editor-content-restoring {
+  animation: editorContentRestore 400ms ease forwards;
+}
+
+/* Final state exit — reverse the dramatic entrance */
+@keyframes finalStateExit {
+  0% {
+    opacity: 1;
+    background: #ffffff;
+    color: #000000;
+  }
+  30% {
+    background: #1a0000;
+    color: #ff3333;
+  }
+  60% {
+    background: #000;
+    color: #ff0000;
+  }
+  100% {
+    opacity: 0;
+    background: #000;
+    color: #000;
+  }
+}
+
+.final-state.dramatic-exit {
+  animation: finalStateExit 600ms ease forwards;
+}
+
+/* Text corruption restore */
+@keyframes textUncorrupt {
+  0% {
+    letter-spacing: 4px;
+    word-spacing: 8px;
+  }
+  50% {
+    letter-spacing: -1px;
+    word-spacing: -3px;
+  }
+  100% {
+    letter-spacing: 0;
+    word-spacing: 0;
+  }
+}
+
+.text-uncorrupting {
+  animation: textUncorrupt 500ms ease forwards;
+}
+
+/* Screen restore pulse — green glow on each redo */
+@keyframes restorePulse {
+  0% {
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.restore-pulse {
+  animation: restorePulse 600ms ease;
+}
+
+/* Toast restore style */
+.system-toast.restore {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.system-toast.restore .toast-icon {
+  background: #22c55e;
+}
+
+.system-toast.restore .toast-content strong {
+  color: #166534;
+}
+
+.system-toast.restore .toast-content span {
+  color: #15803d;
+}
+
+body.dark-mode .system-toast.restore {
+  background: #14532d;
+  border-color: #166534;
+}
+
+body.dark-mode .system-toast.restore .toast-content strong {
+  color: #86efac;
+}
+
+body.dark-mode .system-toast.restore .toast-content span {
+  color: #4ade80;
+}
+
+/* Status badge restore state */
+.status-restoring {
+  color: #16a34a;
+  background: #f0fdf4;
+  animation: restorePulse 0.8s infinite;
+}
+
+.status-restoring .status-dot {
+  background: #22c55e;
+}
+
+body.dark-mode .status-restoring {
+  color: #86efac;
+  background: #14532d;
+}
+
+/* ==========================================
+   DARK MODE — SYSTEM UNDO OVERRIDES
+   ========================================== */
+
+/* Final state dark mode */
+body.dark-mode .final-state {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+body.dark-mode .final-state a {
+  color: #93c5fd;
+}
+
+body.dark-mode .final-state a:visited {
+  color: #c4b5fd;
+}
+
+/* Final state entrance dark mode */
+@keyframes finalStateEntranceDark {
+  0% {
+    opacity: 0;
+    background: #000;
+    color: #000;
+  }
+  30% {
+    opacity: 1;
+    background: #000;
+    color: #ff0000;
+  }
+  50% {
+    background: #1a0000;
+    color: #ff3333;
+  }
+  100% {
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+}
+
+body.dark-mode .final-state.dramatic-entrance {
+  animation: finalStateEntranceDark 1200ms ease forwards;
+}
+
+/* Final state exit dark mode */
+@keyframes finalStateExitDark {
+  0% {
+    opacity: 1;
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+  30% {
+    background: #1a0000;
+    color: #ff3333;
+  }
+  60% {
+    background: #000;
+    color: #ff0000;
+  }
+  100% {
+    opacity: 0;
+    background: #000;
+    color: #000;
+  }
+}
+
+body.dark-mode .final-state.dramatic-exit {
+  animation: finalStateExitDark 600ms ease forwards;
+}
+
+/* Editor card restore shadow for dark mode */
+body.dark-mode .editor-restoring {
+  animation: editorRestoreDark 600ms ease forwards;
+}
+
+@keyframes editorRestoreDark {
+  0% {
+    opacity: 0;
+    transform: perspective(800px) rotateX(15deg) translateY(20px);
+    border-radius: 0;
+  }
+  30% {
+    opacity: 0.4;
+    transform: perspective(800px) rotateX(8deg) translateY(10px);
+    border-radius: 6px;
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
+  }
+  60% {
+    transform: perspective(800px) rotateX(3deg) translateY(3px);
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0deg) translateY(0);
+    border-radius: 18px;
+    box-shadow:
+      0 20px 45px rgba(0, 0, 0, 0.25),
+      0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* CSS destroy gradient dark mode */
+body.dark-mode.css-destroyed {
+  animation: cssUnwindDark 800ms ease forwards;
+}
+
+@keyframes cssUnwindDark {
+  0% {
+    filter: none;
+    opacity: 1;
+  }
+  25% {
+    filter: hue-rotate(90deg) saturate(1.5);
+  }
+  50% {
+    filter: hue-rotate(180deg) brightness(0.8) contrast(1.2);
+  }
+  75% {
+    filter: hue-rotate(270deg) saturate(0.3) blur(1px);
+    opacity: 0.6;
+  }
+  100% {
+    filter: grayscale(1) blur(0.5px) brightness(0.7);
+    opacity: 0.8;
+  }
+}
+
+/* Restore pulse stronger for dark mode */
+body.dark-mode .restore-pulse {
+  animation: restorePulseDark 600ms ease;
+}
+
+@keyframes restorePulseDark {
+  0% {
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+/* Undo indicator warning/unstable dark mode backgrounds already exist,
+   but ensure the restore state works too */
+body.dark-mode .undo-indicator.restore-indicator {
+  border-color: #22c55e;
+  background: rgba(20, 83, 45, 0.4);
 }
