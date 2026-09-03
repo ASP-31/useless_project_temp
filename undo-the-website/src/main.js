@@ -917,6 +917,559 @@ function reconstructWithAnimations() {
 }
 
 // ==========================================
+// CORRUPTED RECONSTRUCTION
+// After the "Undo the Undo" rebuild the site
+// comes back scrambled. Purely visual/temporary.
+// ==========================================
+
+let toolbarOriginalOrder = [];
+let clonedCorruptNodes = [];
+
+function pickRandom(arr, count) {
+  const copy = arr.slice();
+  const out = [];
+  while (out.length < count && copy.length > 0) {
+    out.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+  }
+  return out;
+}
+
+function resetCorruption() {
+  const appEl = app;
+  if (!appEl) return;
+
+  scramblableContainers.forEach(({ el }) => {
+    const container = typeof el === "function" ? el() : el;
+    if (!container) return;
+    [...container.children].forEach((child) => {
+      child.style.order = "";
+    });
+  });
+
+  appEl.classList.remove(
+    "corrupt-theme-header",
+    "corrupt-theme-footer",
+    "corrupt-theme-toolbar",
+    "corrupt-theme-sidebar",
+    "corrupt-theme-undo",
+    "corrupt-theme-workspace"
+  );
+
+  document.documentElement.removeAttribute("data-corrupt-theme");
+
+  const allCorruptEls = document.querySelectorAll([...corruptTargets, ".corrupt-rotate", ".corrupt-scale", ".corrupt-position", ".corrupt-depth", ".corrupt-overlap-bot", ".corrupt-overlap-header", ".corrupt-title", ".corrupt-narrow", ".corrupt-wide", ".corrupt-toolbar-big"].join(", "));
+  allCorruptEls.forEach((el) => {
+    el.classList.remove(
+      "corrupt-rotate",
+      "corrupt-scale",
+      "corrupt-position",
+      "corrupt-narrow",
+      "corrupt-wide",
+      "corrupt-toolbar-big",
+      "corrupt-depth",
+      "corrupt-overlap-bot",
+      "corrupt-overlap-header",
+      "corrupt-title"
+    );
+    ["--corrupt-rotate", "--corrupt-scale", "--corrupt-x", "--corrupt-y", "--corrupt-sidebar", "--corrupt-hue", "--corrupt-sat"].forEach((v) => {
+      el.style.removeProperty(v);
+    });
+    el.style.order = "";
+    el.style.zIndex = "";
+    el.style.marginTop = "";
+    el.style.marginBottom = "";
+  });
+
+  // Restore the original toolbar child order.
+  if (toolbarOriginalOrder.length) {
+    const toolbar = document.getElementById("editor-toolbar");
+    if (toolbar) {
+      const current = toolbar.querySelectorAll(".toolbar-group, .toolbar-divider");
+      current.forEach((node) => toolbar.removeChild(node));
+      toolbarOriginalOrder.forEach((node) => toolbar.appendChild(node));
+    }
+  }
+  toolbarOriginalOrder = [];
+
+  // Remove any duplicated/cloned nodes.
+  clonedCorruptNodes.forEach((node) => node && node.parentNode && node.parentNode.removeChild(node));
+  clonedCorruptNodes = [];
+
+  // Restore the document title.
+  if (documentTitle && documentTitle.dataset.corruptTitle) {
+    delete documentTitle.dataset.corruptTitle;
+    const activeDoc = documents.find((d) => d.id === activeDocumentId);
+    documentTitle.value = activeDoc ? `${activeDoc.name}.txt` : "Document1.txt";
+  }
+
+  // The website is back to normal — forget any persisted scramble.
+  clearScrambleState();
+}
+
+function corruptToolbarOrder() {
+  const toolbar = document.getElementById("editor-toolbar");
+  if (!toolbar) return;
+  const groups = toolbar.querySelectorAll(":scope > .toolbar-group, :scope > .toolbar-divider");
+  if (groups.length === 0) return;
+
+  toolbarOriginalOrder = Array.from(groups);
+  const shuffled = Array.from(groups).sort(() => Math.random() - 0.5);
+  shuffled.forEach((node) => toolbar.appendChild(node));
+}
+
+function corruptDuplicateNode() {
+  const candidates = [
+    () => document.getElementById("bold-btn"),
+    () => document.querySelector(".save-dot"),
+    () => document.querySelector(".history-counter"),
+    () => document.getElementById("undo-btn"),
+  ];
+  const pickers = candidates.filter((fn) => fn());
+  if (pickers.length === 0) return;
+
+  const src = pickers[Math.floor(Math.random() * pickers.length)]();
+  const clone = src.cloneNode(true);
+  clone.classList.add("corrupt-clone");
+  clone.setAttribute("data-corrupt-dup", "true");
+  clone.removeAttribute("id");
+  clone.style.pointerEvents = "none";
+  if (src.parentNode) {
+    src.parentNode.insertBefore(clone, src.nextSibling);
+    clonedCorruptNodes.push(clone);
+  }
+}
+
+function corruptRandomTitle() {
+  if (!documentTitle) return;
+  const names = [
+    "Recovered_Document_FINAL_FINAL",
+    "Document1_RECOVERED",
+    "Recovered_Copy_2_FINAL",
+    "untitled_WE_ARE_SORRY",
+    "FINAL_v2_ACTUALLY_FINAL",
+  ];
+  const pick = names[Math.floor(Math.random() * names.length)];
+  documentTitle.value = `${pick}.txt`;
+  documentTitle.dataset.corruptTitle = "true";
+  documentTitle.classList.add("corrupt-title");
+}
+
+// Containers whose children get their order scrambled.
+const scramblableContainers = [
+  { el: () => document.getElementById("app"), children: [".app-header", ".main-layout", ".app-footer", ".undo-indicator"] },
+  { el: () => document.querySelector(".main-layout"), children: [".sidebar", ".workspace"] },
+];
+
+// Every major component that can be visually corrupted.
+const corruptTargets = [
+  ".app-header",
+  ".sidebar",
+  ".workspace",
+  ".editor-card",
+  ".editor-toolbar",
+  ".app-footer",
+  ".undo-indicator",
+];
+
+function scrambleContainerOrders() {
+  scramblableContainers.forEach(({ el, children }) => {
+    const container = typeof el === "function" ? el() : el;
+    if (!container) return;
+
+    const kids = Array.from(container.children).filter((child) =>
+      children.some((sel) => child.matches && child.matches(sel))
+    );
+    if (kids.length < 2) return;
+
+    // Assign a fresh, random stagger of flex orders so nothing matches its
+    // original neighbour — the whole stack gets shuffled, not just the footer.
+    const orders = [...Array(kids.length).keys()].sort(() => Math.random() - 0.5);
+    const base = Math.floor(Math.random() * 3);
+    kids.forEach((child, i) => {
+      child.style.order = String(base + orders[i]);
+    });
+  });
+}
+
+function applyCorruption() {
+  const appEl = app;
+  if (!appEl) return;
+
+  // Always clean any prior corruption so effects never accumulate.
+  resetCorruption();
+
+  /* 1. Scramble the whole layout -- always */
+  scrambleContainerOrders();
+
+  /* 2. Random toolbar order -- almost always (buttons remain functional) */
+  if (Math.random() < 0.9) corruptToolbarOrder();
+
+  /* 3. WARP big regions: rotate + skew + scale + translate all at once */
+  const warp = {
+    rot: () => [-24, -18, -14, -10, -7, -4, 4, 7, 10, 14, 18, 24, 30][Math.floor(Math.random() * 13)],
+    skew: () => [-22, -16, -10, -6, 0, 0, 6, 10, 16, 22][Math.floor(Math.random() * 10)],
+    scale: () => (0.7 + Math.random() * 0.9).toFixed(3), // 0.70..1.60
+    x: () => Math.floor(Math.random() * 141) - 70, // -70..70
+    y: () => Math.floor(Math.random() * 81) - 40, // -40..40
+  };
+
+  const warpEl = (el) => {
+    if (!el) return;
+    el.classList.add("corrupt-warp");
+    el.style.setProperty("--cr-rot", `${warp.rot()}deg`);
+    el.style.setProperty("--cr-skew", `${warp.skew()}deg`);
+    el.style.setProperty("--cr-skew-y", `${warp.skew()}deg`);
+    el.style.setProperty("--cr-scale", warp.scale());
+    el.style.setProperty("--cr-x", `${warp.x()}px`);
+    el.style.setProperty("--cr-y", `${warp.y()}px`);
+  };
+
+  // Warp most major regions.
+  const regionCount = 3 + Math.floor(Math.random() * 5); // 3..7 of the regions
+  pickRandom(corruptTargets, regionCount).forEach((sel) => warpEl(document.querySelector(sel)));
+
+  // Warp the app-level stack itself for maximum disorder.
+  if (Math.random() < 0.6) warpEl(appEl);
+
+  /* 4. Warp smaller inner controls too */
+  const innerParts = document.querySelectorAll(
+    "#editor-toolbar .toolbar-btn, .toolbar-group, #editor-toolbar .toolbar-divider, " +
+      ".editor-actions .action-btn, .action-left, .editor-actions .save-btn, " +
+      ".sidebar .sidebar-item, .sidebar .sidebar-header, .sidebar-bottom, .storage-bar, " +
+      ".header-actions .btn, .brand, .brand-name, .document-info, .status-badge, " +
+      "#app-footer a, .footer-left, .footer-center, .footer-right, .undo-shortcuts, .history-counter"
+  );
+  innerParts.forEach((el) => {
+    if (Math.random() < 0.6) {
+      el.classList.add("corrupt-warp");
+      el.style.setProperty("--cr-rot", `${[-16, -12, -8, -5, 5, 8, 12, 16][Math.floor(Math.random() * 8)]}deg`);
+      el.style.setProperty("--cr-skew", `${[-14, -8, 0, 0, 8, 14][Math.floor(Math.random() * 6)]}deg`);
+      el.style.setProperty("--cr-skew-y", "0deg");
+      el.style.setProperty("--cr-scale", (0.85 + Math.random() * 0.5).toFixed(3));
+      el.style.setProperty("--cr-x", `${Math.floor(Math.random() * 51) - 25}px`);
+      el.style.setProperty("--cr-y", `${Math.floor(Math.random() * 41) - 20}px`);
+    }
+  });
+
+  /* 5. Random sizing -- sidebar width + toolbar big */
+  const sidebarEl = document.querySelector(".sidebar");
+  if (sidebarEl && Math.random() < 0.9) {
+    sidebarEl.classList.add("corrupt-narrow");
+    sidebarEl.style.setProperty("--corrupt-sidebar", `${70 + Math.floor(Math.random() * 220)}px`);
+  }
+  const toolbar = document.getElementById("editor-toolbar");
+  if (toolbar && Math.random() < 0.8) toolbar.classList.add("corrupt-toolbar-big");
+
+  /* 6. Overlap the main sections aggressively */
+  if (Math.random() < 0.9) {
+    const header = document.querySelector(".app-header");
+    if (header) {
+      header.classList.add("corrupt-overlap-header");
+      header.style.marginBottom = `${12 + Math.floor(Math.random() * 42)}px`;
+    }
+  }
+  if (Math.random() < 0.85) {
+    const footer = document.querySelector(".app-footer");
+    if (footer) {
+      footer.classList.add("corrupt-overlap-bot");
+      footer.style.marginTop = `${14 + Math.floor(Math.random() * 46)}px`;
+    }
+  }
+  if (Math.random() < 0.85) {
+    const sIde = document.querySelector(".sidebar");
+    const worksp = document.querySelector(".workspace");
+    if (sIde && worksp) {
+      sIde.style.zIndex = "8";
+      sIde.style.marginRight = `${-12 - Math.floor(Math.random() * 40)}px`;
+    }
+  }
+
+  /* 7. Duplicate up to three harmless elements */
+  const dupCount = 1 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < dupCount; i++) corruptDuplicateNode();
+
+  /* 8. Corrupted document title -- always */
+  corruptRandomTitle();
+
+  // Persist exactly what was scrambled so reload shows the same state.
+  captureCorruptionState();
+}
+
+// ==========================================
+// SCRAMBLE PERSISTENCE (survives reload)
+// ==========================================
+
+function embedSel(el) {
+  if (!el) return null;
+  if (el.id) return "#" + el.id;
+  const known = [
+    ".app-header",
+    ".sidebar",
+    ".workspace",
+    ".app-footer",
+    ".undo-indicator",
+    ".editor-card",
+    ".editor-toolbar",
+    ".save-dot",
+    ".history-counter",
+  ];
+  for (const sel of known) {
+    if (el.matches && el.matches(sel)) return sel;
+  }
+  return null;
+}
+
+// Read what corruption is currently applied and store it so a reload can
+// reproduce the same scramble instead of generating a new random one.
+// Locate a small inner element by a known container scope + index so it can be
+// reliably re-found on reload.
+function innerLoc(el) {
+  if (!el) return null;
+  const scopes = [
+    ["toolbar-btn", "#editor-toolbar .toolbar-btn"],
+    ["action-btn", ".editor-actions .action-btn"],
+    ["undo-action", ".undo-controls .undo-action-btn"],
+    ["sidebar-item", ".sidebar .sidebar-item"],
+  ];
+  for (const [name, sel] of scopes) {
+    if (el.matches && el.matches(sel)) {
+      return { name, index: Array.from(document.querySelectorAll(sel)).indexOf(el) };
+    }
+  }
+  return null;
+}
+
+function elByLoc(loc) {
+  if (!loc) return null;
+  const selMap = {
+    "toolbar-btn": "#editor-toolbar .toolbar-btn",
+    "action-btn": ".editor-actions .action-btn",
+    "undo-action": ".undo-controls .undo-action-btn",
+    "sidebar-item": ".sidebar .sidebar-item",
+  };
+  const sel = selMap[loc.name];
+  if (!sel) return null;
+  return Array.from(document.querySelectorAll(sel))[loc.index] || null;
+}
+
+// Read what corruption is currently applied and store it so a reload can
+// reproduce the same scramble instead of generating a new random one.
+function captureCorruptionState() {
+  const s = {
+    v: 1,
+    order: {},
+    toolbar: null,
+    warp: [],
+    narrow: null,
+    toolbarBig: false,
+    theme: null,
+    themeClasses: [],
+    depth: [],
+    overlap: [],
+    duplicates: [],
+    title: null,
+  };
+
+  scramblableContainers.forEach(({ el }, ci) => {
+    const container = typeof el === "function" ? el() : el;
+    if (!container) return;
+    Array.from(container.children).forEach((child, index) => {
+      if (child.style && child.style.order !== "") {
+        s.order[ci + ":" + index] = child.style.order;
+      }
+    });
+  });
+
+  const toolbar = document.getElementById("editor-toolbar");
+  if (toolbar) {
+    const groups = toolbar.querySelectorAll(":scope > .toolbar-group, :scope > .toolbar-divider");
+    if (groups.length && toolbarOriginalOrder.length) {
+      s.toolbar = Array.from(groups).map((g) => Array.from(toolbarOriginalOrder).indexOf(g));
+    }
+  }
+
+  document.querySelectorAll(".corrupt-warp").forEach((el) => {
+    const w = {
+      rot: el.style.getPropertyValue("--cr-rot"),
+      skew: el.style.getPropertyValue("--cr-skew"),
+      skewY: el.style.getPropertyValue("--cr-skew-y"),
+      scale: el.style.getPropertyValue("--cr-scale"),
+      x: el.style.getPropertyValue("--cr-x"),
+      y: el.style.getPropertyValue("--cr-y"),
+    };
+    const sel = embedSel(el);
+    if (sel) s.warp.push({ sel, ...w });
+    else {
+      const loc = innerLoc(el);
+      if (loc) s.warp.push({ loc, ...w });
+    }
+  });
+
+  const sidebarEl = document.querySelector(".sidebar");
+  if (sidebarEl && sidebarEl.classList.contains("corrupt-narrow")) {
+    s.narrow = sidebarEl.style.getPropertyValue("--corrupt-sidebar");
+  }
+  s.toolbarBig = !!(toolbar && toolbar.classList.contains("corrupt-toolbar-big"));
+
+  const theme = document.documentElement.getAttribute("data-corrupt-theme");
+  if (theme) s.theme = theme;
+  s.themeClasses = [...(app ? app.classList : [])].filter((c) => c.indexOf("corrupt-theme-") === 0);
+
+  document.querySelectorAll(".corrupt-depth").forEach((el) => {
+    const sel = embedSel(el);
+    if (!sel) return;
+    s.depth.push({
+      sel,
+      hue: el.style.getPropertyValue("--corrupt-hue"),
+      sat: el.style.getPropertyValue("--corrupt-sat"),
+    });
+  });
+
+  const header = document.querySelector(".app-header");
+  const footer = document.querySelector(".app-footer");
+  const sidebar = document.querySelector(".sidebar");
+  if (header && header.classList.contains("corrupt-overlap-header")) {
+    s.overlap.push({ sel: "#app-header", m: header.style.marginBottom });
+  }
+  if (footer && footer.classList.contains("corrupt-overlap-bot")) {
+    s.overlap.push({ sel: "#app-footer", m: footer.style.marginTop });
+  }
+  if (sidebar && sidebar.style.zIndex) {
+    s.overlap.push({ sel: ".sidebar", z: sidebar.style.zIndex, mr: sidebar.style.marginRight });
+  }
+
+  document.querySelectorAll(".corrupt-clone[data-corrupt-dup]").forEach((clone) => {
+    const prev = clone.previousElementSibling;
+    if (!prev) return;
+    const sel = embedSel(prev);
+    if (sel) s.duplicates.push(sel);
+  });
+
+  if (documentTitle && documentTitle.dataset.corruptTitle) {
+    s.title = documentTitle.value;
+  }
+
+  saveScrambleState(s);
+}
+
+function applyCapturedCorruptionState(s) {
+  if (!s || s.v !== 1) return;
+  const appEl = app;
+
+  // Order of scramblable container children.
+  scramblableContainers.forEach(({ el }, ci) => {
+    const container = typeof el === "function" ? el() : el;
+    if (!container) return;
+    const kids = Array.from(container.children);
+    kids.forEach((child, index) => {
+      const order = s.order[ci + ":" + index];
+      if (order !== undefined) child.style.order = order;
+    });
+  });
+
+  if (Array.isArray(s.toolbar)) {
+    const toolbar = document.getElementById("editor-toolbar");
+    if (toolbar) {
+      const groups = Array.from(toolbar.querySelectorAll(":scope > .toolbar-group, :scope > .toolbar-divider"));
+      toolbarOriginalOrder = groups.slice();
+      const reordered = s.toolbar
+        .map((idx) => groups[idx])
+        .filter(Boolean);
+      reordered.forEach((node) => toolbar.appendChild(node));
+    }
+  }
+
+  (s.warp || []).forEach((w) => {
+    const el = (w.sel && document.querySelector(w.sel)) || elByLoc(w.loc);
+    if (!el) return;
+    el.classList.add("corrupt-warp");
+    el.style.setProperty("--cr-rot", w.rot || "0deg");
+    el.style.setProperty("--cr-skew", w.skew || "0deg");
+    el.style.setProperty("--cr-skew-y", w.skewY || "0deg");
+    el.style.setProperty("--cr-scale", w.scale || "1");
+    el.style.setProperty("--cr-x", w.x || "0px");
+    el.style.setProperty("--cr-y", w.y || "0px");
+  });
+
+  if (s.narrow) {
+    const sb = document.querySelector(".sidebar");
+    if (sb) {
+      sb.classList.add("corrupt-narrow");
+      sb.style.setProperty("--corrupt-sidebar", s.narrow);
+    }
+  }
+  if (s.toolbarBig) {
+    const tb = document.getElementById("editor-toolbar");
+    if (tb) tb.classList.add("corrupt-toolbar-big");
+  }
+
+  if (s.theme) {
+    document.documentElement.setAttribute("data-corrupt-theme", s.theme);
+    (s.themeClasses || []).forEach((c) => appEl && appEl.classList.add(c));
+  }
+  (s.depth || []).forEach((d) => {
+    const el = document.querySelector(d.sel);
+    if (el) {
+      el.classList.add("corrupt-depth");
+      el.style.setProperty("--corrupt-hue", d.hue);
+      el.style.setProperty("--corrupt-sat", d.sat);
+    }
+  });
+
+  (s.overlap || []).forEach((o) => {
+    const el = document.querySelector(o.sel);
+    if (!el) return;
+    if (o.sel === ".sidebar") {
+      el.style.zIndex = o.z;
+      el.style.marginRight = o.mr;
+    } else if (o.sel === "#app-header") {
+      el.classList.add("corrupt-overlap-header");
+      el.style.marginBottom = o.m;
+    } else if (o.sel === "#app-footer") {
+      el.classList.add("corrupt-overlap-bot");
+      el.style.marginTop = o.m;
+    }
+  });
+
+  (s.duplicates || []).forEach((srcSel) => {
+    const src = document.querySelector(srcSel);
+    if (src) {
+      const clone = src.cloneNode(true);
+      clone.classList.add("corrupt-clone");
+      clone.setAttribute("data-corrupt-dup", "true");
+      if (src.id) clone.removeAttribute("id");
+      clone.style.pointerEvents = "none";
+      if (src.parentNode) {
+        src.parentNode.insertBefore(clone, src.nextSibling);
+        clonedCorruptNodes.push(clone);
+      }
+    }
+  });
+
+  if (s.title !== null && s.title !== undefined && documentTitle) {
+    documentTitle.value = s.title;
+    documentTitle.dataset.corruptTitle = "true";
+    documentTitle.classList.add("corrupt-title");
+  }
+}
+
+// Called on init: re-apply any persisted scramble so reload looks identical.
+function reapplyScrambleState() {
+  try {
+    const raw = localStorage.getItem(SCRAMBLE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    applyCapturedCorruptionState(s);
+    updateSystemStatus();
+    updateHistoryUI();
+    return true;
+  } catch (e) {
+    console.error("Failed to reapply scramble state", e);
+    return false;
+  }
+}
+
+// ==========================================
 // DESTRUCTION STATUS
 // ==========================================
 
@@ -1581,22 +2134,21 @@ const rebuildOverlay = document.getElementById("rebuild-overlay");
 const rebuildText = document.getElementById("rebuild-text");
 const rebuildProgress = document.getElementById("rebuild-progress");
 
-const rebuildPhrases = [
-  "Undoing the undo...",
-  "Gathering lost bytes...",
-  "Reassembling the footer...",
-  "Rebuilding the sidebar...",
-  "Restoring the document list...",
-  "Reattaching the toolbar...",
-  "Reviving the formatting...",
-  "Un-folding the editor...",
-  "Restoring your content...",
-  "Reconstructing the header...",
-  "Rebooting the system status...",
-  "Ungluing the undo button...",
-  "Polishing the layout...",
-  "Almost there...",
-  "Done. This time, maybe don't press Ctrl+Z?",
+const rebuildSequence = [
+  { text: "RECONSTRUCTION STARTING...", to: 0.06 },
+  { text: "Gathering lost bytes...", to: 0.14 },
+  { text: "Recovering DOM...", to: 0.26 },
+  { text: "Restoring components...", to: 0.40 },
+  { text: "Recovering stylesheet...", to: 0.55 },
+  { text: "Checking structural integrity...", to: 0.72 },
+  { text: "ERROR: DOM STRUCTURE CORRUPTED", to: 0.72 },
+  { text: "ERROR: CSS RECOVERY FAILED", to: 0.72 },
+  { text: "ERROR: COMPONENT ORDER UNKNOWN", to: 0.72 },
+  { text: "Attempting emergency reconstruction...", to: 0.78 },
+  { text: "Reconstructing anyway...", to: 0.88 },
+  { text: "RECOVERY COMPLETE", to: 0.94 },
+  { text: "WEBSITE RECOVERY COMPLETE", to: 0.98 },
+  { text: "BUT SOMETHING WENT WRONG...", to: 1 },
 ];
 
 const REBUILD_MS = 12000;
@@ -1616,23 +2168,22 @@ function rebuildWebsiteSequence() {
   rebuildOverlay.hidden = false;
 
   let step = 0;
-  const stepMs = REBUILD_MS / rebuildPhrases.length;
+  const stepMs = REBUILD_MS / rebuildSequence.length;
 
   const interval = setInterval(() => {
-    step++;
-    const progress = Math.min(step / rebuildPhrases.length, 1) * 100;
-
-    if (rebuildProgress) rebuildProgress.style.width = `${progress}%`;
-
-    const phraseIdx = Math.floor((step / rebuildPhrases.length) * rebuildPhrases.length);
-    if (rebuildText && rebuildPhrases[phraseIdx]) {
-      rebuildText.textContent = rebuildPhrases[phraseIdx];
-    }
-
-    if (step >= rebuildPhrases.length) {
+    if (step >= rebuildSequence.length) {
       clearInterval(interval);
       finishReconstruction();
+      return;
     }
+
+    const phase = rebuildSequence[step];
+    step++;
+
+    if (rebuildText) rebuildText.textContent = phase.text;
+
+    const progress = phase.to * 100;
+    if (rebuildProgress) rebuildProgress.style.width = `${progress}%`;
   }, stepMs);
 }
 

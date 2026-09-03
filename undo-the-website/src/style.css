@@ -1968,3 +1968,123 @@ body.dark-mode .unstable-undo {
     transform: scale(1);
   }
 }
+
+/* =========================================
+   CORRUPTED RECONSTRUCTION
+   Temporary classes used after the "Undo the
+   Undo" rebuild so the website comes back
+   scrambled. All are reversible and removed on
+   the next destruction cycle.
+========================================= */
+
+.corrupt-rotate {
+  transform: rotate(var(--corrupt-rotate, 2deg));
+}
+
+.corrupt-scale {
+  transform: scale(var(--corrupt-scale, 1.03));
+}
+
+.corrupt-position {
+  position: relative;
+  transform: translate(var(--corrupt-x, 8px), var(--corrupt-y, 0px));
+  z-index: 5;
+}
+
+.corrupt-warp {
+  position: relative;
+  z-index: 5;
+  transform: rotate(var(--cr-rot, 0deg)) skew(var(--cr-skew, 0deg), var(--cr-skew-y, 0deg))
+    scale(var(--cr-scale, 1)) translate(var(--cr-x, 0px), var(--cr-y, 0px));
+}
+
+.sidebar.corrupt-narrow {
+  width: var(--corrupt-sidebar, 180px);
+}
+
+.editor-card.corrupt-wide {
+  flex: 1 1 100%;
+  min-height: 640px;
+}
+
+.editor-toolbar.corrupt-toolbar-big .toolbar-btn {
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+.editor-toolbar.corrupt-toolbar-big .toolbar-btn .color-dot {
+  width: 18px;
+  height: 18px;
+}
+
+.corrupt-depth {
+  filter: hue-rotate(var(--corrupt-hue, 40deg)) saturate(var(--corrupt-sat, 1.2));
+}
+
+.corrupt-clone {
+  animation: corruptBlink 1s ease-in-out infinite;
+}
+
+:root[data-corrupt-theme="red"] { --corrupt-bg: #7f1d1d; --corrupt-fg: #fee2e2; }
+:root[data-corrupt-theme="teal"] { --corrupt-bg: #134e4a; --corrupt-fg: #ccfbf1; }
+:root[data-corrupt-theme="violet"] { --corrupt-bg: #4c1d95; --corrupt-fg: #ede9fe; }
+:root[data-corrupt-theme="rose"] { --corrupt-bg: #881337; --corrupt-fg: #ffe4e6; }
+
+#app.corrupt-theme-header .app-header {
+  background: var(--corrupt-bg, #7f1d1d);
+  color: var(--corrupt-fg, #fee2e2);
+}
+#app.corrupt-theme-header .app-header .brand-name,
+#app.corrupt-theme-header .app-header .document-title {
+  color: var(--corrupt-fg, #fee2e2);
+}
+
+#app.corrupt-theme-footer .app-footer {
+  background: var(--corrupt-bg, #134e4a);
+  color: var(--corrupt-fg, #ccfbf1);
+}
+
+#app.corrupt-theme-toolbar .editor-toolbar {
+  background: var(--corrupt-bg, #4c1d95);
+}
+#app.corrupt-theme-toolbar .editor-toolbar .toolbar-btn {
+  color: var(--corrupt-fg, #ede9fe);
+}
+
+#app.corrupt-theme-sidebar .sidebar {
+  background: var(--corrupt-bg, #881337);
+  color: var(--corrupt-fg, #ffe4e6);
+}
+#app.corrupt-theme-sidebar .sidebar .sidebar-item {
+  color: var(--corrupt-fg, #ffe4e6);
+}
+
+#app.corrupt-theme-workspace .workspace .editor-card {
+  background: var(--corrupt-bg, #134e4a);
+}
+#app.corrupt-theme-workspace .workspace .editor-card,
+#app.corrupt-theme-workspace .workspace .editor-card .text-editor {
+  color: var(--corrupt-fg, #ccfbf1);
+}
+#app.corrupt-theme-workspace .workspace .editor-card .text-editor {
+  caret-color: var(--corrupt-fg, #ccfbf1);
+}
+
+#app.corrupt-theme-undo .undo-indicator {
+  background: var(--corrupt-bg, #4c1d95);
+  color: var(--corrupt-fg, #ede9fe);
+}
+
+.corrupt-overlap-bot { margin-top: 18px; }
+.corrupt-overlap-header { margin-bottom: 14px; }
+
+.document-title.corrupt-title {
+  font-style: italic;
+  color: #b91c1c !important;
+  text-decoration: wavy underline;
+}
+
+@keyframes corruptBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
