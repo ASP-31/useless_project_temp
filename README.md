@@ -51,46 +51,35 @@ We decided this absolutely needed to be solved.
 
 **Undo the Website** takes Ctrl+Z way too seriously.
 
-After all user actions have been undone, the website begins undoing **itself**.
+After all user actions have been undone, the website begins undoing **itself** — one tiny component at a time.
 
 ```text
 USER HISTORY EXHAUSTED
 
         ↓
 
-SYSTEM UNDO ACTIVATED
+SYSTEM UNDO ACTIVATED — 40 STAGES
 
         ↓
 
-Undoing footer...
-
+Footer: GitHub → Terms → Privacy → Status → Version → Entire footer
         ↓
-
-Undoing sidebar...
-
+Sidebar: Add Document → Storage → Doc List → Header → Entire sidebar
         ↓
-
-Undoing CSS...
-
+CSS: Text corruption → ACTUAL STYLESHEET REMOVED (raw HTML!)
         ↓
-
-Undoing toolbar...
-
+Actions: More → Download → Link → Emoji → Delete → Save
         ↓
-
-Undoing header...
-
+Toolbar: Clear → Color → Align → Underline → Bold → Style → Entire toolbar
         ↓
-
-Undoing editor...
-
+Editor: Content cleared → Editor card collapses with 3D perspective
         ↓
-
-UNDO BUTTON UNSTABLE
-
+Header: Export → Theme → Status → Title → Brand → Entire header
         ↓
-
-404 — THIS WEBSITE HAS BEEN UNDONE
+Indicator: Redo → Undo → Shortcuts → Counter → Entire indicator
+        ↓
+WEBSITE UNDONE — status CRITICAL — last thing on screen is the
+"⟲ UNDO THE UNDO" button
 ```
 
 Please stop pressing Ctrl+Z.
@@ -139,11 +128,20 @@ History Exhausted?
    ↙           ↘
  No             Yes
  ↓               ↓
-Normal Undo   System Undo
+Normal Undo   System Undo (40 stages)
                  ↓
-          Website Destruction
-                 ↓
-                404
+     Individual Element Destruction
+     (fade-out, slide, 3D collapse, CSS removal)
+                  ↓
+     WEBSITE UNDONE (status CRITICAL — only the
+     "⟲ UNDO THE UNDO" button remains)
+                  ↓
+     Manual Redo (Ctrl+Y / Ctrl+Shift+Z / Redo button)
+     — one component per click (combo bonus for fast clicks)
+                  ↓
+     Scrambled / Wrong-Position Rebuild
+                  ↓
+     "UNDO THE UNDO" auto-restore (~20s)
 ```
 
 ---
@@ -176,7 +174,7 @@ The editor currently supports:
 * Rename documents
 * Delete documents
 * Automatically persist documents using `localStorage`
-* Restore documents after page refresh
+* Restore documents after page refresh (unless the website is left broken — see System Undo below)
 
 ### Undo / Redo System
 
@@ -196,6 +194,62 @@ Features include:
 * History handling for formatting operations
 
 The system also captures typing intelligently instead of creating a history entry for every individual character.
+
+### System Undo / Website Destruction
+
+The core feature of the project — when user history is exhausted, Ctrl+Z starts removing website components one by one across **40 granular stages**.
+
+#### Destruction Order (40 stages)
+
+```text
+FOOTER (6 stages):  GitHub → Terms → Privacy → Status → Version → Entire footer
+SIDEBAR (5 stages): Add Doc → Storage → Doc List → Header → Entire sidebar
+CSS (2 stages):     Text corruption → Stylesheet REMOVED (raw HTML)
+ACTIONS (6 stages): More → Download → Link → Emoji → Delete → Save
+TOOLBAR (7 stages): Clear → Color → Align → Underline → Bold → Style → Entire toolbar
+EDITOR (2 stages):  Content cleared → Editor card 3D collapse
+HEADER (6 stages):  Export → Theme → Status → Title → Brand → Entire header
+INDICATOR (5 stages): Redo → Undo → Shortcuts → Counter → Entire indicator
+FINAL (1 stage):    Website undone — status CRITICAL, only the "⟲ UNDO THE UNDO" button remains
+```
+
+#### Redo / Website Rebuild
+
+Once complete destruction has happened, the website is gone and the status badge reads **Critical** — the last thing on screen is the **"⟲ UNDO THE UNDO"** button. Manual redo (via **Ctrl+Y / Ctrl+Shift+Z** or the floating **Redo** button when the UI is visible) restores the website **one component per click**, with live toast progress, milestone celebrations, glitch moments, and a **combo bonus** that restores an extra component every 4 fast clicks.
+
+```text
+11 THEMED PHASES, SHUFFLED EVERY SESSION (plus a final "Rebirth"):
+  Foundation → Identity → Controls → File Cabinet → Workspace →
+  Formatting → Actions → Content → Stylesheet → Undo System → Fine Print
+```
+
+But there's a twist — as of the latest update redo **does not** put things back where they belong:
+
+* Restored components land in **random / wrong positions** (scattered across the header, sidebar, workspace and footer).
+* The only proper way to set the rebuilt site right is to **wipe `localStorage`**, which reloads the pristine DOM.
+* The status badge stays **Critical** while the site is broken, eases to **Warning** once under 15% remains, and only flips to **Ready** (with confetti) when everything is back.
+
+#### Undo The Undo (Auto-Restore)
+
+When the website is fully undone, the **"⟲ UNDO THE UNDO"** button is the **last thing on screen**:
+
+* No busy 404 background or red/green gradient — the screen is clean, with only the **UNDO THE UNDO** button.
+* The button stays on screen through the undoing process and never flickers away.
+* It **goes away after redo** — once the website is rebuilt, the button disappears.
+
+Clicking it triggers the auto-rebuild experience:
+
+* A **centered loading screen** (spinner + "Rebuilding the website… X / N pieces" counter) appears **immediately** when clicked.
+* Components **fly in** one at a time from random off-screen directions, landing in scrambled/wrong positions.
+* The whole rebuild takes **~20 seconds** (always at least 10s).
+* Manual REDO / Ctrl+Y cancels the auto-rebuild and returns control to the user.
+
+#### Animations
+
+* **Destruction**: Fade-out, slide-out, 3D perspective collapse, CSS filter corruption, screen shake
+* **Restore**: Fade-in with bounce, slide-in, 3D perspective reverse, green pulse, stylesheet re-insertion
+* **Toast notifications**: Dramatic warnings (yellow) during undo, danger (red) for critical stages, green for restores
+* **Dark mode**: All animations and colors adapt to the current theme
 
 ### Editor Actions
 
@@ -250,6 +304,7 @@ Features include:
 * Light/Dark theme toggle
 * Theme preference saved in `localStorage`
 * Theme restored automatically after refresh
+* The scrambled version achieved through redo is **persisted across refresh** — refreshing shows that scrambled layout, **not** the pristine default
 * Dark header
 * Dark sidebar
 * Dark editor
@@ -289,7 +344,7 @@ Features include:
 * [x] Floating Undo / Redo controls
 * [x] User history counter
 * [x] System toast container
-* [x] Final 404 state
+* [x] 404 element in markup (vestigial — never shown as the final state; UNDO THE UNDO is used instead)
 
 ### Phase 3 — Editor Functionality
 
@@ -335,21 +390,41 @@ Features include:
 * [x] Persistent theme preference
 * [x] Theme-aware UI components
 
+### Phase 6 — System Undo / Website Destruction
+
+* [x] 40-stage granular destruction sequence
+* [x] Individual element removal with fade-out animations
+* [x] CSS stylesheet actually removed (raw unstyled HTML)
+* [x] Screen shake on every undo step
+* [x] Dramatic toast notifications for each stage
+* [x] System status badge updates (Ready → Warning → Critical)
+* [x] Undo indicator warning/unstable states
+* [x] "WEBSITE UNDONE" end state — app hidden, status CRITICAL, only the UNDO THE UNDO button remains (no 404 screen / red redo button)
+* [x] Undo button disabled at the fully-undone state (only UNDO THE UNDO works)
+* [x] One-component-per-click redo system (40 stages, shuffled themed phases)
+* [x] Restore animations (fade-in, slide-in, 3D perspective reverse)
+* [x] Green pulse on each redo step
+* [x] Dark mode support for all destruction/restore animations
+* [x] Full redo capability (Ctrl+Y or redo button)
+* [x] Redo restores parts in scrambled / wrong positions (fix requires clearing `localStorage`)
+* [x] "UNDO THE UNDO" button — automatic full rebuild over ~20s (min 10s)
+* [x] Auto-rebuild shows a centered loading screen immediately on click (spinner + piece counter)
+* [x] Auto-rebuild components fly in one-by-one from off-screen into scrambled positions
+* [x] "UNDO THE UNDO" is the last thing on screen — no 404 screen / red-green gradient at the end
+* [x] "UNDO THE UNDO" stays visible during undo and goes away after redo is complete
+* [x] Scrambled version achieved through redo is persisted across refresh — reload shows the scrambled layout, not the pristine default
+* [x] Edit shorthand — editor region shortened so it isn't covered by the undo/redo bar
+* [x] Save button moved next to the "··· more options" button in the action bar
+
 ### Current Focus
 
-**System Undo / Website Destruction**
+**System Undo / Website Destruction — COMPLETE**
 
-The normal editor functionality and Undo/Redo foundation are now in place.
+The core concept of the project is fully implemented:
 
-The next major development stage is the core concept of the project:
+> **When user history reaches zero, Ctrl+Z stops undoing the document and starts undoing the website itself — one component at a time across 40 stages.**
 
-> **When user history reaches zero, Ctrl+Z should stop undoing the document and start undoing the website itself.**
-
-The destruction sequence will progressively remove or disable parts of the interface before reaching the final:
-
-```text
-404: Website Undone.
-```
+After complete destruction, the website is gone with the status badge at **Critical** and only the **"⟲ UNDO THE UNDO"** button left on screen. It reassembles everything automatically over ~20 seconds, with parts flying back into **scrambled, wrong positions** — so the only way to truly set the rebuilt site right is to clear `localStorage`. Manual redo (Ctrl+Y / Ctrl+Shift+Z / the Redo button) restores one component per click along the way.
 
 ---
 
@@ -395,27 +470,29 @@ http://localhost:5173
 
 ### Screenshots
 
+> Screenshots are not added yet — they'll be dropped in before submission.
+
 #### 1. Editor
 
-![Editor](screenshots/editor.png)
+*Screenshot pending (screenshots/editor.png)*
 
 *The normal editor before the website realizes what is about to happen.*
 
 #### 2. Dark Mode
 
-![Dark Mode](screenshots/dark-mode.png)
+*Screenshot pending (screenshots/dark-mode.png)*
 
 *The same editor after embracing the darkness.*
 
 #### 3. System Undo
 
-![System Undo](screenshots/system-undo.png)
+*Screenshot pending (screenshots/system-undo.png)*
 
 *The moment Ctrl+Z stops undoing user actions and starts undoing the application.*
 
 #### 4. Final State
 
-![Website Undone](screenshots/website-undone.png)
+*Screenshot pending (screenshots/website-undone.png)*
 
 *The inevitable result: the website has successfully undone itself.*
 
@@ -423,7 +500,7 @@ http://localhost:5173
 
 ## Workflow
 
-![Workflow](screenshots/workflow.png)
+*Screenshot pending (screenshots/workflow.png)*
 
 *The application transitions from normal user history to system-level destruction once the undo history is exhausted.*
 

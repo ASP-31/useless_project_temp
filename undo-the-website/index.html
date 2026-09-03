@@ -9,7 +9,7 @@
       content="UndoApp — A text editor that doesn't know when to stop undoing."
     />
 
-    <title>UndoApp — Undo the Website</title>
+    <title>Texto — Undo the Website</title>
     <link rel="stylesheet" href="src/style.css">
   </head>
 
@@ -32,7 +32,7 @@
 
           <a href="#" id="brand-link" class="brand">
             <span class="brand-icon">↶</span>
-            <span class="brand-name">UndoApp</span>
+            <span class="brand-name">Texto</span>
           </a>
 
           <span id="system-status" class="status-badge status-ready">
@@ -84,7 +84,7 @@
         <!-- ================= SIDEBAR ================= -->
         <aside id="sidebar" class="sidebar">
 
-          <div class="sidebar-header">
+          <div id="sidebar-header" class="sidebar-header">
             <span>Documents</span>
 
             <button
@@ -98,7 +98,7 @@
             </button>
           </div>
 
-          <nav class="sidebar-nav">
+          <nav id="sidebar-nav" class="sidebar-nav">
 
             <a href="#" class="sidebar-item active">
               <span class="sidebar-icon">▤</span>
@@ -116,7 +116,7 @@
             <span>Add Document</span>
           </button>
 
-          <div class="sidebar-bottom">
+          <div id="sidebar-bottom" class="sidebar-bottom">
             <div class="storage-label">
               <span>Storage</span>
               <span>24%</span>
@@ -276,7 +276,7 @@
                   data-placeholder="Type here..."
                   spellcheck="true"
                 >
-                  <h1>Welcome to UndoApp</h1>
+                  <h1>Welcome to Texto</h1>
 
                   <p>
                     Start writing something here. Everything you do can be
@@ -366,15 +366,17 @@
                     </div>
                   </div>
 
-                </div>
+                  <div class="action-divider"></div>
 
-                <button
-                  id="save-btn"
-                  class="btn btn-primary save-btn"
-                  type="button"
-                >
-                  Save
-                </button>
+                  <button
+                    id="save-btn"
+                    class="btn btn-primary save-btn"
+                    type="button"
+                  >
+                    Save
+                  </button>
+
+                </div>
 
               </div>
 
@@ -390,25 +392,25 @@
       <!-- ================= FOOTER ================= -->
       <footer id="app-footer" class="app-footer">
 
-        <div class="footer-left">
-          <span>UndoApp v1.0</span>
+        <div id="footer-left" class="footer-left">
+          <span id="footer-version">UndoApp v1.0</span>
 
           <span class="footer-divider">•</span>
 
-          <span>All changes saved</span>
+          <span id="footer-save-status">All changes saved</span>
         </div>
 
-        <div class="footer-center">
+        <div id="footer-center" class="footer-center">
           <span class="footer-status">
             <span class="status-dot"></span>
-            System operational
+            <span id="footer-status-text">System operational</span>
           </span>
         </div>
 
-        <div class="footer-right">
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
-          <a href="#">GitHub</a>
+        <div id="footer-right" class="footer-right">
+          <a id="footer-privacy" href="#">Privacy</a>
+          <a id="footer-terms" href="#">Terms</a>
+          <a id="footer-github" href="#">GitHub</a>
         </div>
 
       </footer>
@@ -444,7 +446,7 @@
 
         </div>
 
-        <div class="undo-shortcuts">
+        <div id="undo-shortcuts" class="undo-shortcuts">
           <span>Undo</span>
           <kbd>Ctrl</kbd>
           <span>+</span>
@@ -458,7 +460,7 @@
           <kbd>Y</kbd>
         </div>
 
-        <div class="history-counter">
+        <div id="history-counter" class="history-counter">
           <span>User History</span>
           <strong id="history-count">0</strong>
         </div>
@@ -478,8 +480,13 @@
         <div class="toast-content">
           <strong id="toast-title">System Message</strong>
           <span id="toast-message"></span>
+          <div id="toast-progress" class="toast-progress">
+            <div id="toast-progress-fill" class="toast-progress-fill"></div>
+          </div>
         </div>
       </div>
+
+      <div id="confetti-burst" class="confetti-burst"></div>
 
 
       <!-- ================= FINAL STATE ================= -->
@@ -489,10 +496,29 @@
 
         <p>There is nothing left to undo.</p>
 
-        <a href="#" id="redo-website">
-          [ Press Ctrl+Y to Redo the Website ]
-        </a>
+        <button id="big-redo-btn" class="big-redo-btn" type="button">
+          ↻ REDO
+        </button>
 
+        <p class="redo-hint">or press <kbd>Ctrl</kbd> + <kbd>Y</kbd></p>
+
+      </div>
+
+      <!-- ================= UNDO THE UNDO (LAST STAGE — never disappears) ================= -->
+      <div id="undo-the-undo-bar" class="undo-the-undo-bar">
+        <button id="undo-the-undo-btn" class="undo-the-undo-btn" type="button">
+          ⟲ UNDO THE UNDO
+        </button>
+        <p class="undo-the-undo-hint">bring everything back automatically in ~20s</p>
+      </div>
+
+      <!-- ================= AUTO-REBUILD LOADING ================= -->
+      <div id="auto-rebuild-loading" class="auto-rebuild-loading">
+        <div class="auto-rebuild-spinner"></div>
+        <div class="auto-rebuild-text">
+          <strong>Rebuilding the website…</strong>
+          <span id="auto-rebuild-count"></span>
+        </div>
       </div>
 
     </div>
