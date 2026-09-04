@@ -555,6 +555,28 @@ http://localhost:5173
 
 
 ---
+### The Journey 
+
+### Starting Period
+
+<img width="525" height="701" alt="image" src="https://github.com/user-attachments/assets/90d57009-016a-4851-9a95-1624a5e77ea3" />
+
+
+
+### Development Period
+
+
+<img width="900" height="1600" alt="image" src="https://github.com/user-attachments/assets/4f4fc167-97f5-4d4e-b030-0d9b341e01c6" />
+
+<img width="1251" height="702" alt="image" src="https://github.com/user-attachments/assets/226a9a9a-3fac-47a7-a561-d573af4f8653" />
+
+### Debugging Period
+
+
+<img width="417" height="733" alt="image" src="https://github.com/user-attachments/assets/9b98f3d5-aaf7-45de-ae3e-fac664df603e" />
+
+
+---
 
 ## Why?
 
@@ -563,6 +585,8 @@ Because apparently,
 **Ctrl+Z wasn't powerful enough.**
 
 ---
+
+
 
 Made with questionable decisions at **TinkerHub Useless Projects**.
 
